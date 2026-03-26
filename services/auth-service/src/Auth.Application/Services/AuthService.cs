@@ -1,25 +1,12 @@
 using System.Threading.Tasks;
+using Auth.Application.DTOs;
+using Auth.Application.Interfaces;
 
 namespace Auth.Application.Services;
 
-public class RegisterRequest
-{
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
 
-public class UserData
-{
-    public string Username { get; set; } = string.Empty;
-}
 
-public class AuthResult
-{
-    public bool Success { get; set; }
-    public UserData? Data { get; set; }
-}
-
-public class AuthService
+public class AuthService : IAuthService
 {
     public async Task<AuthResult> RegisterAsync(RegisterRequest request)
     {

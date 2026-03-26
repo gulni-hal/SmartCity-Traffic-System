@@ -1,5 +1,6 @@
 using Xunit;
 using Auth.Application.Services;
+using Auth.Application.DTOs;
 
 public class AuthServiceTests
 {
