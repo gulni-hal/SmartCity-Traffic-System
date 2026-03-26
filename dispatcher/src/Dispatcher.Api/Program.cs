@@ -6,6 +6,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UseMiddleware<AuthMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -44,4 +45,7 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 }
 
 
+
+
 public partial class Program { }
+
