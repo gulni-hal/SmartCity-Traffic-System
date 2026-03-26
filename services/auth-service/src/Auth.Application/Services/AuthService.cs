@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 
 namespace Auth.Application.Services;
@@ -22,9 +21,17 @@ public class AuthResult
 
 public class AuthService
 {
-    public Task<AuthResult> RegisterAsync(RegisterRequest request)
+    public async Task<AuthResult> RegisterAsync(RegisterRequest request)
     {
-        
-        throw new NotImplementedException();
+        var result = new AuthResult
+        {
+            Success = true,
+            Data = new UserData
+            {
+                Username = request.Username
+            }
+        };
+
+        return await Task.FromResult(result);
     }
 }
