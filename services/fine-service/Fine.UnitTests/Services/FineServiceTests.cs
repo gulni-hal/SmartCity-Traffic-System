@@ -1,6 +1,7 @@
 ﻿using Xunit;
 using System.Threading.Tasks;
 using Fine.Application.Services;
+using Fine.Application.DTOs;
 
 namespace Fine.UnitTests.Services;
 
