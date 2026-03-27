@@ -25,8 +25,18 @@ public class FineResult
 
 public class FineService
 {
-    public Task<FineResult> CreateFineAsync(CreateFineRequest request)
+    public async Task<FineResult> CreateFineAsync(CreateFineRequest request)
     {
-        throw new NotImplementedException();
+        
+        var result = new FineResult
+        {
+            Success = true,
+            Data = new FineData
+            {
+                LicensePlate = request.LicensePlate
+            }
+        };
+
+        return await Task.FromResult(result);
     }
 }
