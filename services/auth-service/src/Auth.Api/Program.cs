@@ -1,28 +1,34 @@
-using Auth.Application.Interfaces;
+﻿using Auth.Application.Interfaces;
 using Auth.Application.Services;
+using Auth.Infrastructure.Repositories; // Yeni yazdığımız repository için ekledik
 
 var builder = WebApplication.CreateBuilder(args);
 
-//API Controller'larini projeye ekliyoruz
 builder.Services.AddControllers();
-
-//Swagger API dokumantasyonu ve test arayuzu ayarlari
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//TDD ile yazdigimiz servisimizi Dependency Injection (DI) konteynerine kaydediyoruz
+// appsettings.json içindeki MongoDB ayarlarını okuyoruz
+var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
+var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
+
+// Dependency Injection (DI) Kayıtları
+// IUserRepository istendiğinde, ayarları içine koyarak MongoUserRepository veriyoruz
+builder.Services.AddScoped<IUserRepository>(provider =>
+    new MongoUserRepository(mongoConnectionString!, mongoDatabaseName!)
+);
+
+// AuthService'i ekliyoruz (Artık otomatik olarak MongoUserRepository'yi kullanacak)
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
-//Gelistirme ortamindaysak Swagger arayuzunu a�
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-//Guvenlik ve yonlendirme middleware'leri
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
