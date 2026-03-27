@@ -11,7 +11,10 @@ public class AuthMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context.Request.Path.StartsWithSegments("/health"))
+        var path = context.Request.Path;
+
+        if (path.StartsWithSegments("/health") ||
+            path.StartsWithSegments("/api/auth"))
         {
             await _next(context);
             return;
