@@ -1,3 +1,5 @@
+using Dispatcher.Api.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // YARP ekle
@@ -6,17 +8,9 @@ builder.Services.AddReverseProxy()
 
 var app = builder.Build();
 
-// Auth middleware (þimdilik basit)
-app.Use(async (context, next) =>
-{
-    if (!context.Request.Headers.ContainsKey("Authorization"))
-    {
-        context.Response.StatusCode = 401;
-        return;
-    }
+app.MapGet("/health", () => Results.Ok("Healthy"));
 
-    await next();
-});
+app.UseMiddleware<AuthMiddleware>();
 
 // Reverse proxy baþlat
 app.MapReverseProxy();

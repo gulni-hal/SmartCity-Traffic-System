@@ -1,4 +1,6 @@
-﻿public class AuthMiddleware
+﻿namespace Dispatcher.Api.Middleware;
+
+public class AuthMiddleware
 {
     private readonly RequestDelegate _next;
 
@@ -7,11 +9,17 @@
         _next = next;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
+        if (context.Request.Path.StartsWithSegments("/health"))
+        {
+            await _next(context);
+            return;
+        }
+
         if (!context.Request.Headers.ContainsKey("Authorization"))
         {
-            context.Response.StatusCode = 401;
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("Unauthorized");
             return;
         }

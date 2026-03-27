@@ -41,6 +41,26 @@ public class UnauthorizedAccessTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_Traffic_Without_Token_Should_Return_401()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/services/traffic-service");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_Fines_Without_Token_Should_Return_401()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/services/fine-service");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
 
 
