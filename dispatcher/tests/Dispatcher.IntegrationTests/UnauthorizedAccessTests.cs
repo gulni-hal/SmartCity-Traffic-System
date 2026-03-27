@@ -61,6 +61,17 @@ public class UnauthorizedAccessTests
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_Auth_Route_Without_Token_Should_Not_Return_401()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/auth/login");
+
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
 }
 
 
