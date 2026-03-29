@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Auth.Application.DTOs
 {
-    internal class ValidateTokenRequest
+    public class ValidateTokenRequest
     {
         public string Token { get; set; } = string.Empty;
     }

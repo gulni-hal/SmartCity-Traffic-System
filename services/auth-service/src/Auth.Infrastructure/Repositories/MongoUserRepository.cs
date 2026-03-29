@@ -26,5 +26,16 @@ public class MongoUserRepository : IUserRepository
     {
         //Veritabaninda bu kullanici adiyla eslesen ilk kaydi getirir
         return await _usersCollection.Find(u => u.Username == username).FirstOrDefaultAsync();
+
+    }
+
+    public async Task<User?> GetByTokenAsync(string token)
+    {
+        return await _usersCollection.Find(u => u.Token == token).FirstOrDefaultAsync();
+    }
+
+    public async Task UpdateAsync(User user)
+    {
+        await _usersCollection.ReplaceOneAsync(u => u.Id == user.Id, user);
     }
 }
