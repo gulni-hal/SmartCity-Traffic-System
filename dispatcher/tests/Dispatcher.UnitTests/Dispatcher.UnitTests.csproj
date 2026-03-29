@@ -24,9 +24,13 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Dispatcher.Application\Dispatcher.Application.csproj" />
+    <ProjectReference Include="..\..\src\Dispatcher.Api\Dispatcher.Api.csproj" />
   </ItemGroup>
 
 </Project>
