@@ -13,8 +13,7 @@ public class AuthMiddleware
     {
         var path = context.Request.Path;
 
-        if (path.StartsWithSegments("/health") ||
-            path.StartsWithSegments("/api/auth"))
+        if (IsPublicPath(path))
         {
             await _next(context);
             return;
@@ -28,5 +27,11 @@ public class AuthMiddleware
         }
 
         await _next(context);
+    }
+
+    private static bool IsPublicPath(PathString path)
+    {
+        return path.StartsWithSegments("/health") ||
+               path.StartsWithSegments("/api/auth");
     }
 }

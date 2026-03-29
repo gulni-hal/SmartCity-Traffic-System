@@ -26,4 +26,15 @@ public class AuthRouteTests : IClassFixture<WebApplicationFactory<Program>>
 
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_Auth_Route_Without_Token_Should_Be_Public()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/auth/register");
+
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
 }
