@@ -1,7 +1,6 @@
-using System.Threading.Tasks;
 using Auth.Application.DTOs;
-using Auth.Application.Interfaces;
 using Auth.Application.Entities;
+using Auth.Application.Interfaces;
 
 namespace Auth.Application.Services;
 
@@ -9,46 +8,79 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
 
-    //Veritabani arayuzumuzu(IUserRepository) iceri aliyoruz
     public AuthService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
     }
 
-    public Task<AuthResult> LoginAsync(LoginRequest request)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<AuthResult> RegisterAsync(RegisterRequest request)
     {
-        //1.Kullanici adi daha once alinmis mi kontrol et
-       var existingUser = await _userRepository.GetByUsernameAsync(request.Username);
-        if (existingUser != null)
+        var existingUser = await _userRepository.GetByUsernameAsync(request.Username);
+        if (existingUser is not null)
         {
-            return new AuthResult { Success = false }; // kullanici zaten var!
+            return new AuthResult { Success = false };
         }
 
-        //2.Yeni kullanici olustur(sifre hashlenebilir)
         var newUser = new User
         {
             Username = request.Username,
-            PasswordHash = request.Password // sifre
+            PasswordHash = request.Password,
+            Role = request.Role
         };
 
-        //3.veritabanina kaydet
-       await _userRepository.CreateAsync(newUser);
+        await _userRepository.CreateAsync(newUser);
 
-        //4.basarili sonuc don
         return new AuthResult
         {
             Success = true,
-            Data = new UserData { Username = newUser.Username }
+            Data = new UserData
+            {
+                Username = newUser.Username,
+                Role = newUser.Role
+            }
         };
     }
 
-    public Task<TokenValidationResult> ValidateTokenAsync(string token)
+    public async Task<AuthResult> LoginAsync(LoginRequest request)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByUsernameAsync(request.Username);
+        if (user is null || user.PasswordHash != request.Password)
+        {
+            return new AuthResult { Success = false };
+        }
+
+        user.Token = Guid.NewGuid().ToString();
+        await _userRepository.UpdateAsync(user);
+
+        return new AuthResult
+        {
+            Success = true,
+            Data = new UserData
+            {
+                Username = user.Username,
+                Role = user.Role,
+                Token = user.Token
+            }
+        };
+    }
+
+    public async Task<TokenValidationResult> ValidateTokenAsync(string token)
+    {
+        var user = await _userRepository.GetByTokenAsync(token);
+
+        if (user is null)
+        {
+            return new TokenValidationResult
+            {
+                IsValid = false
+            };
+        }
+
+        return new TokenValidationResult
+        {
+            IsValid = true,
+            Username = user.Username,
+            Role = user.Role
+        };
     }
 }
