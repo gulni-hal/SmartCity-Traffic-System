@@ -10,6 +10,10 @@ var app = builder.Build();
 
 app.MapGet("/health", () => Results.Ok("Healthy"));
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
+
 app.UseMiddleware<AuthMiddleware>();
 
 // Reverse proxy baþlat
