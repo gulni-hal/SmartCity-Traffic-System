@@ -1,0 +1,33 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Xunit;
+using Fine.Api.Middleware;
+
+namespace Fine.UnitTests.Middleware;
+
+public class InternalOnlyMiddlewareTests
+{
+    [Fact]
+    public async Task InvokeAsync_Should_Return_403_When_Header_Is_Missing()
+    {
+        // Arrange (Hazırlık)
+        var context = new DefaultHttpContext();
+        // İstekte bilerek gizli şifre (Header) göndermiyoruz.
+
+        // Sahte bir appsettings.json yapılandırması oluşturuyoruz
+        var inMemorySettings = new Dictionary<string, string?> { { "InternalSecret", "SuperGizliSifre123" } };
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
+
+        RequestDelegate next = (HttpContext hc) => Task.CompletedTask;
+        var middleware = new InternalOnlyMiddleware(next, configuration);
+
+        // Act (Eylem)
+        await middleware.InvokeAsync(context);
+
+        // Assert (Doğrulama)
+        // Beklentimiz: Şifre olmadığı için sistemin 403 Forbidden (Yasak) dönmesi
+        Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
+    }
+}

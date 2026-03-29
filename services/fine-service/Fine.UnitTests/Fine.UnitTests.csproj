@@ -20,8 +20,13 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\src\Fine.Application\Fine.Application.csproj" />
+    <ProjectReference Include="..\src\Fine.Api\Fine.Api.csproj" />
   </ItemGroup>
 
 </Project>
