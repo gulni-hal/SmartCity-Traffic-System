@@ -9,5 +9,8 @@ public interface IUserRepository
    Task<User?> GetByUsernameAsync(string username);
 
     //Yeni kullaniciyi veritabanina kaydetmek icin
-   Task CreateAsync(User user);
+    Task<User?> GetByTokenAsync(string token);
+    Task CreateAsync(User user);
+    Task UpdateAsync(User user);
+
 }

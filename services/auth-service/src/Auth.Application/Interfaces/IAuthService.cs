@@ -7,4 +7,7 @@ public interface IAuthService
 {
     //Dependency Injection (DI) kurarken veya API Controller  test edilirken bu interface kullanilacakkk!!
     Task<AuthResult> RegisterAsync(RegisterRequest request);
+    Task<AuthResult> LoginAsync(LoginRequest request);
+    Task<TokenValidationResult> ValidateTokenAsync(string token);
+
 }
