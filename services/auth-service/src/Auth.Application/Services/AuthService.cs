@@ -15,6 +15,11 @@ public class AuthService : IAuthService
         _userRepository = userRepository;
     }
 
+    public Task<AuthResult> LoginAsync(LoginRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<AuthResult> RegisterAsync(RegisterRequest request)
     {
         //1.Kullanici adi daha once alinmis mi kontrol et
@@ -40,5 +45,10 @@ public class AuthService : IAuthService
             Success = true,
             Data = new UserData { Username = newUser.Username }
         };
+    }
+
+    public Task<TokenValidationResult> ValidateTokenAsync(string token)
+    {
+        throw new NotImplementedException();
     }
 }
