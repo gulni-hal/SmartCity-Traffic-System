@@ -43,6 +43,12 @@ public class AuthMiddleware
             return;
         }
 
+        if (!IsRoleAuthorized(path, validationResult.Role))
+        {
+            await WriteForbiddenAsync(context);
+            return;
+        }
+
         context.Items["Username"] = validationResult.Username;
         context.Items["Role"] = validationResult.Role;
 
@@ -67,9 +73,30 @@ public class AuthMiddleware
         return string.Empty;
     }
 
+    private static bool IsRoleAuthorized(PathString path, string role)
+    {
+        if (path.StartsWithSegments("/api/fines"))
+        {
+            return role is "Admin" or "TrafficPolice";
+        }
+
+        if (path.StartsWithSegments("/api/traffic"))
+        {
+            return role is "Admin" or "TrafficPolice" or "Observer";
+        }
+
+        return true;
+    }
+
     private static async Task WriteUnauthorizedAsync(HttpContext context)
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         await context.Response.WriteAsync("Unauthorized");
+    }
+
+    private static async Task WriteForbiddenAsync(HttpContext context)
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsync("Forbidden");
     }
 }
