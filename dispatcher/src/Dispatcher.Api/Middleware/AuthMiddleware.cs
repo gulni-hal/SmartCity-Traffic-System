@@ -73,20 +73,25 @@ public class AuthMiddleware
         return string.Empty;
     }
 
+    private static readonly Dictionary<string, string[]> RoutePolicies = new()
+    {
+        ["/api/fines"] = ["Admin", "TrafficPolice"],
+        ["/api/traffic"] = ["Admin", "TrafficPolice", "Observer"]
+    };
+
     private static bool IsRoleAuthorized(PathString path, string role)
     {
-        if (path.StartsWithSegments("/api/fines"))
+        foreach (var policy in RoutePolicies)
         {
-            return role is "Admin" or "TrafficPolice";
-        }
-
-        if (path.StartsWithSegments("/api/traffic"))
-        {
-            return role is "Admin" or "TrafficPolice" or "Observer";
+            if (path.StartsWithSegments(policy.Key))
+            {
+                return policy.Value.Contains(role);
+            }
         }
 
         return true;
     }
+
 
     private static async Task WriteUnauthorizedAsync(HttpContext context)
     {
