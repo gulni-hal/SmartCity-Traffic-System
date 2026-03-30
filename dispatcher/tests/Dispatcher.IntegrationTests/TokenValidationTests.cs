@@ -55,4 +55,32 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
             return Task.FromResult(_result);
         }
     }
+
+    [Fact]
+    public async Task Get_Fines_With_Observer_Role_Should_Return_403()
+    {
+        var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll(typeof(IAuthValidationService));
+                services.AddSingleton<IAuthValidationService>(
+                    new FakeAuthValidationService(new AuthValidationResult
+                    {
+                        IsValid = true,
+                        Username = "ali",
+                        Role = "Observer"
+                    }));
+            });
+        });
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", "valid-token");
+
+        var response = await client.GetAsync("/api/fines/list");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
 }
