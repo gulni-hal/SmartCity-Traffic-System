@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using Dispatcher.Application;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -28,7 +23,7 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
         {
             builder.ConfigureServices(services =>
             {
-                services.RemoveAll<IAuthValidationService>();
+                services.RemoveAll(typeof(IAuthValidationService));
                 services.AddSingleton<IAuthValidationService>(
                     new FakeAuthValidationService(new AuthValidationResult
                     {

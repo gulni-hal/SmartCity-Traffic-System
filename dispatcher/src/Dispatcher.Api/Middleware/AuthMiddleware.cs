@@ -1,4 +1,6 @@
-﻿namespace Dispatcher.Api.Middleware;
+﻿using Dispatcher.Application;
+
+namespace Dispatcher.Api.Middleware;
 
 public class AuthMiddleware
 {
@@ -9,7 +11,7 @@ public class AuthMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IAuthValidationService authValidationService)
     {
         var path = context.Request.Path;
 
@@ -19,12 +21,30 @@ public class AuthMiddleware
             return;
         }
 
-        if (!context.Request.Headers.ContainsKey("Authorization"))
+        if (!context.Request.Headers.TryGetValue("Authorization", out var authHeader))
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsync("Unauthorized");
+            await WriteUnauthorizedAsync(context);
             return;
         }
+
+        var token = authHeader.ToString().Replace("Bearer ", "").Trim();
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            await WriteUnauthorizedAsync(context);
+            return;
+        }
+
+        var validationResult = await authValidationService.ValidateAsync(token);
+
+        if (!validationResult.IsValid)
+        {
+            await WriteUnauthorizedAsync(context);
+            return;
+        }
+
+        context.Items["Username"] = validationResult.Username;
+        context.Items["Role"] = validationResult.Role;
 
         await _next(context);
     }
@@ -33,5 +53,11 @@ public class AuthMiddleware
     {
         return path.StartsWithSegments("/health") ||
                path.StartsWithSegments("/api/auth");
+    }
+
+    private static async Task WriteUnauthorizedAsync(HttpContext context)
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await context.Response.WriteAsync("Unauthorized");
     }
 }
