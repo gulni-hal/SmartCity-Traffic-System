@@ -27,7 +27,7 @@ public class AuthMiddleware
             return;
         }
 
-        var token = authHeader.ToString().Replace("Bearer ", "").Trim();
+        var token = ExtractToken(authHeader.ToString());
 
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -53,6 +53,18 @@ public class AuthMiddleware
     {
         return path.StartsWithSegments("/health") ||
                path.StartsWithSegments("/api/auth");
+    }
+
+    private static string ExtractToken(string authorizationHeader)
+    {
+        const string bearerPrefix = "Bearer ";
+
+        if (authorizationHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return authorizationHeader[bearerPrefix.Length..].Trim();
+        }
+
+        return string.Empty;
     }
 
     private static async Task WriteUnauthorizedAsync(HttpContext context)
