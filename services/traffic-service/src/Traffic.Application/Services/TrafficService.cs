@@ -1,16 +1,16 @@
 ﻿using System.Threading.Tasks;
+using Traffic.Application.Interfaces;
+using Traffic.Application.Entities;
 
 namespace Traffic.Application.Services;
 
-// Trafik yoğunluğu kaydı için dışarıdan alacağımız veriler
 public class TrafficRecordRequest
 {
     public string LocationId { get; set; } = string.Empty;
     public int VehicleCount { get; set; }
-    public string DensityLevel { get; set; } = string.Empty; // Low, Medium, High
+    public string DensityLevel { get; set; } = string.Empty;
 }
 
-// İşlem sonucu döneceğimiz veriler
 public class TrafficRecordResult
 {
     public bool Success { get; set; }
@@ -19,17 +19,28 @@ public class TrafficRecordResult
 
 public class TrafficService
 {
+    private readonly ITrafficRepository _repository;
+
+    public TrafficService(ITrafficRepository repository)
+    {
+        _repository = repository;
+    }
+
     public async Task<TrafficRecordResult> RecordTrafficAsync(TrafficRecordRequest request)
     {
-        // TDD Green Aşaması: Şimdilik testin geçmesi için gereken en basit ve doğru kodu yazıyoruz.
-        // İleride buraya MongoDB'ye kaydetme mantığını (Repository) ekleyeceğiz.
+        var record = new TrafficRecord
+        {
+            LocationId = request.LocationId,
+            VehicleCount = request.VehicleCount,
+            DensityLevel = request.DensityLevel
+        };
 
-        var result = new TrafficRecordResult
+        await _repository.CreateAsync(record);
+
+        return new TrafficRecordResult
         {
             Success = true,
             Message = "Trafik verisi basariyla kaydedildi."
         };
-
-        return await Task.FromResult(result);
     }
 }

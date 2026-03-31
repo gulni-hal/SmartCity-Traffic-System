@@ -1,6 +1,7 @@
-﻿using Fine.Application.Interfaces;
-using Fine.Application.Services;
-using Fine.Infrastructure.Repositories;
+﻿using Traffic.Application.Interfaces;
+using Traffic.Application.Services;
+using Traffic.Infrastructure.Repositories;
+using Traffic.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,16 +9,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// appsettings.json'dan MongoDB bilgilerini çekiyoruz
 var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
 var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 
-// Dependency Injection (DI) Kayıtları
-builder.Services.AddScoped<IFineRepository>(provider =>
-    new MongoFineRepository(mongoConnectionString!, mongoDatabaseName!)
+builder.Services.AddScoped<ITrafficRepository>(provider =>
+    new MongoTrafficRepository(mongoConnectionString!, mongoDatabaseName!)
 );
-
-builder.Services.AddScoped<IFineService, FineService>();
+builder.Services.AddScoped<TrafficService>();
 
 var app = builder.Build();
 
@@ -30,7 +28,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
-app.UseMiddleware<Fine.Api.Middleware.InternalOnlyMiddleware>();
+// Sadece Dispatcher'dan gelenleri kabul et
+app.UseMiddleware<InternalOnlyMiddleware>();
 
 app.MapControllers();
 
