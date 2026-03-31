@@ -29,6 +29,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
+
+app.UseMiddleware<Fine.Api.Middleware.InternalOnlyMiddleware>();
+
 app.MapControllers();
 
 app.Run();
