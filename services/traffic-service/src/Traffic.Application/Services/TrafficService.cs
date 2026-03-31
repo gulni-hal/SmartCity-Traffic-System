@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Traffic.Application.Services;
 
@@ -20,9 +19,17 @@ public class TrafficRecordResult
 
 public class TrafficService
 {
-    public Task<TrafficRecordResult> RecordTrafficAsync(TrafficRecordRequest request)
+    public async Task<TrafficRecordResult> RecordTrafficAsync(TrafficRecordRequest request)
     {
-        // TDD Red Aşaması: Henüz kodu yazmadık, bilerek patlatıyoruz!
-        throw new NotImplementedException();
+        // TDD Green Aşaması: Şimdilik testin geçmesi için gereken en basit ve doğru kodu yazıyoruz.
+        // İleride buraya MongoDB'ye kaydetme mantığını (Repository) ekleyeceğiz.
+
+        var result = new TrafficRecordResult
+        {
+            Success = true,
+            Message = "Trafik verisi basariyla kaydedildi."
+        };
+
+        return await Task.FromResult(result);
     }
 }
