@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
@@ -13,12 +12,24 @@ public class InternalOnlyMiddleware
     public InternalOnlyMiddleware(RequestDelegate next, IConfiguration configuration)
     {
         _next = next;
-        _configuration = configuration; // appsettings.json'dan gizli şifreyi okumak için
+        _configuration = configuration;
     }
 
-    public Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
-        // TDD Red Aşaması: Bilerek patlatıyoruz!
-        throw new NotImplementedException();
+        // appsettings.json'dan beklenen gizli şifreyi alıyoruz
+        var expectedSecret = _configuration["InternalSecret"];
+
+        // Gelen istekte "X-Internal-Secret" başlığı var mı ve değeri bizimkiyle eşleşiyor mu kontrol ediyoruz
+        if (!context.Request.Headers.TryGetValue("X-Internal-Secret", out var providedSecret) || providedSecret != expectedSecret)
+        {
+            // Eşleşmiyorsa (veya hiç yoksa) 403 Forbidden dön ve isteği burada kes (Kapıdan çevir)
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsync("Erisim reddedildi: Bu servise sadece Dispatcher uzerinden ulasilabilir.");
+            return;
+        }
+
+        // Şifre doğruysa (Dispatcher'dan geliyorsa) isteğin servise gitmesine izin ver
+        await _next(context);
     }
 }
