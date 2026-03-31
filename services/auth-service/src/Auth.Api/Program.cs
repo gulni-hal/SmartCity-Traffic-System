@@ -1,6 +1,8 @@
 ﻿using Auth.Application.Interfaces;
 using Auth.Application.Services;
-using Auth.Infrastructure.Repositories; // Yeni yazdığımız repository için ekledik
+using Auth.Infrastructure.Repositories;
+// Kendi yazdığımız middleware'i kullanabilmek için ekliyoruz
+using Auth.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +33,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
+
+// İŞTE BURASI: Dış dünyadan gelen direkt istekleri engelleyen kalkanımız
+app.UseMiddleware<InternalOnlyMiddleware>();
+
 app.MapControllers();
 
 app.Run();
