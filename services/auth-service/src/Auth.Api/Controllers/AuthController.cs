@@ -22,7 +22,8 @@ public class AuthController : ControllerBase
 
         if (result.Success)
         {
-            return Ok(result);
+            // RMM Seviye 2 Uyumu: Yeni kaynak oluştuğu için 200 OK yerine 201 Created dönüyoruz.
+            return Created(string.Empty, result);
         }
 
         return BadRequest(new { Error = "Kayıt işlemi başarısız oldu." });
@@ -53,5 +54,6 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
+
 
 }

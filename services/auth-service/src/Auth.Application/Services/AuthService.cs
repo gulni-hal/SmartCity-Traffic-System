@@ -1,4 +1,4 @@
-using Auth.Application.DTOs;
+﻿using Auth.Application.DTOs;
 using Auth.Application.Entities;
 using Auth.Application.Interfaces;
 
@@ -81,6 +81,19 @@ public class AuthService : IAuthService
             IsValid = true,
             Username = user.Username,
             Role = user.Role
+        };
+    }
+    public async Task<UserData?> GetUserAsync(string username)
+    {
+        var user = await _userRepository.GetByUsernameAsync(username);
+
+        if (user == null) return null;
+
+        return new UserData
+        {
+            Username = user.Username,
+            // Eğer veritabanı User modelinizde Role varsa onu da buraya ekleyebilirsiniz:
+            // Role = user.Role
         };
     }
 }

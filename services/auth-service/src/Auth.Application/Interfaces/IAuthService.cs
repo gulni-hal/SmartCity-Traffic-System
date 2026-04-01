@@ -9,5 +9,7 @@ public interface IAuthService
     Task<AuthResult> RegisterAsync(RegisterRequest request);
     Task<AuthResult> LoginAsync(LoginRequest request);
     Task<TokenValidationResult> ValidateTokenAsync(string token);
+    // Auth.Application/Interfaces/IAuthService.cs içerisine ekleyin:
+    Task<UserData?> GetUserAsync(string username);
 
 }
