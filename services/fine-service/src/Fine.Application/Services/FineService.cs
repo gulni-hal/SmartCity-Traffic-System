@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Fine.Application.DTOs;
 using Fine.Application.Interfaces;
 using Fine.Application.Entities;
@@ -9,7 +11,6 @@ public class FineService : IFineService
 {
     private readonly IFineRepository _fineRepository;
 
-    // Veritabanı bağımlılığımızı (DI) ekliyoruz
     public FineService(IFineRepository fineRepository)
     {
         _fineRepository = fineRepository;
@@ -17,7 +18,6 @@ public class FineService : IFineService
 
     public async Task<FineResult> CreateFineAsync(CreateFineRequest request)
     {
-        // 1. Gelen isteği veritabanı modeline çevir
         var newFine = new FineRecord
         {
             LicensePlate = request.LicensePlate,
@@ -25,16 +25,26 @@ public class FineService : IFineService
             Reason = request.Reason
         };
 
-        // 2. Veritabanına kaydet
         await _fineRepository.CreateAsync(newFine);
 
-        // 3. Başarılı sonucu dön
-        var result = new FineResult
+        return new FineResult
         {
             Success = true,
             Data = new FineData { LicensePlate = newFine.LicensePlate }
         };
+    }
 
-        return await Task.FromResult(result);
+    // YENİ EKLENEN METOT
+    public async Task<IEnumerable<FineRecordResponse>> GetFinesByPlateAsync(string licensePlate)
+    {
+        var records = await _fineRepository.GetByLicensePlateAsync(licensePlate);
+
+        return records.Select(r => new FineRecordResponse
+        {
+            LicensePlate = r.LicensePlate,
+            Amount = r.Amount,
+            Reason = r.Reason,
+            CreatedAt = r.CreatedAt
+        });
     }
 }
