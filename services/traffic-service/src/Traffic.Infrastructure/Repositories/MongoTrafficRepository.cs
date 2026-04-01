@@ -1,3 +1,4 @@
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using Traffic.Application.Entities;
@@ -19,5 +20,12 @@ public class MongoTrafficRepository : ITrafficRepository
     public async Task CreateAsync(TrafficRecord record)
     {
         await _collection.InsertOneAsync(record);
+    }
+
+    // YENİ EKLENEN METOT
+    public async Task<IEnumerable<TrafficRecord>> GetByLocationIdAsync(string locationId)
+    {
+        // Lokasyona göre filtreleme yapıyoruz
+        return await _collection.Find(t => t.LocationId == locationId).ToListAsync();
     }
 }
