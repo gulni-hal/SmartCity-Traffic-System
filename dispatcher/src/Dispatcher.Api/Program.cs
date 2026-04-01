@@ -2,7 +2,17 @@ using Dispatcher.Api.Middleware;
 using Dispatcher.Application;
 using Dispatcher.Infrastructure;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
+
+var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
+var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
+
+builder.Services.AddScoped<IAuditLogRepository>(provider =>
+    new MongoAuditLogRepository(mongoConnectionString!, mongoDatabaseName!)
+);
+
 
 builder.Services.AddHttpClient("AuthService", client =>
 {
@@ -13,6 +23,8 @@ builder.Services.AddScoped<IAuthValidationService, AuthValidationService>();
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
+
 
 var app = builder.Build();
 
