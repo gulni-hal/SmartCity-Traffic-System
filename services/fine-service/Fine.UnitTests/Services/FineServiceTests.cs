@@ -1,4 +1,6 @@
 ﻿using Xunit;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Fine.Application.Services;
 using Fine.Application.DTOs;
@@ -10,10 +12,21 @@ namespace Fine.UnitTests.Services;
 // Test için sadece hafızada çalışan sahte (Fake) bir veritabanı simülasyonu
 public class FakeFineRepository : IFineRepository
 {
+    // Sahte veritabanımız verileri geçici olarak bu listede tutacak
+    private readonly List<FineRecord> _fines = new();
+
     public Task CreateAsync(FineRecord record)
     {
-        // Gerçekte bir yere kaydetmiyoruz, sadece metot hata vermeden tamamlansın
+        _fines.Add(record);
         return Task.CompletedTask;
+    }
+
+    // YENİ EKLENEN METOT: Arayüzdeki sözleşmeyi yerine getiriyoruz
+    public Task<IEnumerable<FineRecord>> GetByLicensePlateAsync(string licensePlate)
+    {
+        // Plakaya göre listede arama yapıyoruz
+        var result = _fines.Where(f => f.LicensePlate == licensePlate);
+        return Task.FromResult(result.AsEnumerable());
     }
 }
 
