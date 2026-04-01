@@ -1,4 +1,6 @@
 ﻿using Xunit;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Traffic.Application.Services;
 using Traffic.Application.Interfaces;
@@ -6,9 +8,23 @@ using Traffic.Application.Entities;
 
 namespace Traffic.UnitTests.Services;
 
+// Sahte veritabanımızı arayüze uygun hale getirdik
 public class FakeTrafficRepository : ITrafficRepository
 {
-    public Task CreateAsync(TrafficRecord record) => Task.CompletedTask;
+    private readonly List<TrafficRecord> _records = new();
+
+    public Task CreateAsync(TrafficRecord record)
+    {
+        _records.Add(record);
+        return Task.CompletedTask;
+    }
+
+    // YENİ EKLENEN: Arayüz sözleşmesini yerine getiriyoruz
+    public Task<IEnumerable<TrafficRecord>> GetByLocationIdAsync(string locationId)
+    {
+        var result = _records.Where(r => r.LocationId == locationId);
+        return Task.FromResult(result.AsEnumerable());
+    }
 }
 
 public class TrafficServiceTests
