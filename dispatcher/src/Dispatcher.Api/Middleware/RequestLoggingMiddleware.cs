@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Threading.Tasks;
+using Dispatcher.Application;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -9,25 +9,51 @@ public class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RequestLoggingMiddleware> _logger;
+    private readonly IAuditLogRepository _repository;
 
-    public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
+    public RequestLoggingMiddleware(
+        RequestDelegate next,
+        ILogger<RequestLoggingMiddleware> logger,
+        IAuditLogRepository repository)
     {
         _next = next;
         _logger = logger;
+        _repository = repository;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Kronometreyi başlatıyoruz
         var sw = Stopwatch.StartNew();
         _logger.LogInformation(">>> GELEN İSTEK: {Method} {Path}", context.Request.Method, context.Request.Path);
 
-        // İsteği diğer middleware'lere (Auth, YARP vs.) iletiyoruz
         await _next(context);
 
-        // Kronometreyi durdurup geçen süreyi ve sonucu logluyoruz
         sw.Stop();
+
         _logger.LogInformation("<<< GİDEN YANIT: {Method} {Path} | Durum Kodu: {StatusCode} | Süre: {Elapsed}ms",
             context.Request.Method, context.Request.Path, context.Response.StatusCode, sw.ElapsedMilliseconds);
+
+        var log = new RequestAuditLog
+        {
+            Method = context.Request.Method,
+            Path = context.Request.Path,
+            StatusCode = context.Response.StatusCode,
+            Username = context.Items["Username"]?.ToString() ?? string.Empty,
+            Role = context.Items["Role"]?.ToString() ?? string.Empty,
+            TargetService = ResolveTargetService(context.Request.Path),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _repository.CreateAsync(log);
+    }
+
+    private static string ResolveTargetService(PathString path)
+    {
+        if (path.StartsWithSegments("/api/auth")) return "auth-service";
+        if (path.StartsWithSegments("/api/traffic")) return "traffic-service";
+        if (path.StartsWithSegments("/api/fines")) return "fine-service";
+        if (path.StartsWithSegments("/health")) return "dispatcher";
+
+        return "unknown";
     }
 }

@@ -26,11 +26,17 @@ public class ErrorHandlingMiddleware
             await _next(context);
 
             // Eğer arkadaki mikroservis kapalıysa veya hata dönerse (örn: 502 Bad Gateway)
-            if (context.Response.StatusCode >= 400 && context.Response.StatusCode < 600)
+            if (context.Response.StatusCode >= StatusCodes.Status500InternalServerError)
             {
-                _logger.LogWarning("HTTP {StatusCode} hatası oluştu. İstek atılan adres: {Path}",
+                _logger.LogWarning("Sunucu tarafı hata oluştu. StatusCode: {StatusCode}, Path: {Path}",
                     context.Response.StatusCode, context.Request.Path);
             }
+            else if (context.Response.StatusCode >= StatusCodes.Status400BadRequest)
+            {
+                _logger.LogWarning("İstek hatası oluştu. StatusCode: {StatusCode}, Path: {Path}",
+                    context.Response.StatusCode, context.Request.Path);
+            }
+
         }
         catch (Exception ex)
         {
