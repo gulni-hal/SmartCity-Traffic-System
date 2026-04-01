@@ -54,6 +54,21 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
+    // RMM SEVİYE 2 UYUMU: GET Metodu ve URL'den okunan parametre
+    // Örnek İstek: GET /api/auth/ali_veli
+    [HttpGet("{username}")]
+    public async Task<IActionResult> GetUser(string username)
+    {
+        var user = await _authService.GetUserAsync(username);
 
+        if (user == null)
+        {
+            // Kullanıcı bulunamazsa RMM gereği 404 Not Found dönmelidir
+            return NotFound(new { Message = "Kullanıcı bulunamadı." });
+        }
+
+        // Kullanıcı bulunursa 200 OK ve JSON data dönmelidir (Şifreyi asla dönmüyoruz!)
+        return Ok(user);
+    }
 
 }
