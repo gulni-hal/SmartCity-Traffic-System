@@ -40,4 +40,25 @@ public class ErrorHandlingMiddlewareTests
 
         Assert.Contains("false", responseText.ToLower()); // Success: false dönmeli
     }
+
+    [Fact]
+    public async Task InvokeAsync_Should_Not_Change_Response_When_Downstream_Returns_502()
+    {
+        var context = new DefaultHttpContext();
+        context.Response.Body = new MemoryStream();
+
+        RequestDelegate next = async hc =>
+        {
+            hc.Response.StatusCode = StatusCodes.Status502BadGateway;
+            await Task.CompletedTask;
+        };
+
+        var logger = new NullLogger<ErrorHandlingMiddleware>();
+        var middleware = new ErrorHandlingMiddleware(next, logger);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.Equal(StatusCodes.Status502BadGateway, context.Response.StatusCode);
+    }
+
 }
