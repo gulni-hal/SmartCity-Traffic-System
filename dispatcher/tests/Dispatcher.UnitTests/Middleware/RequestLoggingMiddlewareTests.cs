@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.IO;
+﻿using System.IO;
 using Dispatcher.Api.Middleware;
 using Dispatcher.Application;
 using Microsoft.AspNetCore.Http;
@@ -58,4 +52,3 @@ public class RequestLoggingMiddlewareTests
         }
     }
 }
-

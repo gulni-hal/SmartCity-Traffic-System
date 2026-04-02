@@ -6,6 +6,7 @@ using Dispatcher.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var authServiceBaseUrl = builder.Configuration["AuthService:BaseUrl"];
 var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
 var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 
