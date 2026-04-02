@@ -25,10 +25,12 @@ public class FinesController : ControllerBase
 
         if (result.Success)
         {
-            return Ok(result);
+            // HOCA GERİ BİLDİRİMİ UYUMU: 200 OK yerine 201 Created dönüyoruz.
+            // REST standartlarına göre oluşturulan kaynağın yolu da belirtilmelidir.
+            return Created($"/api/fines/{request.LicensePlate}", result);
         }
 
-        return BadRequest(new { Error = "Ceza kaydı oluşturulamadı." });
+        return BadRequest(new { Error = "Ceza kaydı oluşturulamadı. Lütfen bilgileri kontrol edin." });
     }
 
     // READ İŞLEMİ -> GET Metodu -> URL'den parametre alır (RMM Seviye 2 Uyumu)

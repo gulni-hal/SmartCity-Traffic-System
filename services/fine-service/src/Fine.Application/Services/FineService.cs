@@ -18,6 +18,20 @@ public class FineService : IFineService
 
     public async Task<FineResult> CreateFineAsync(CreateFineRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.LicensePlate) || request.LicensePlate.Length < 5)
+        {
+            return new FineResult { Success = false, ErrorMessage = "Geçersiz plaka formatı." };
+        }
+
+        if (request.Amount <= 0)
+        {
+            return new FineResult { Success = false, ErrorMessage = "Ceza tutarı sıfırdan büyük olmalıdır." };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Reason))
+        {
+            return new FineResult { Success = false, ErrorMessage = "Ceza nedeni boş bırakılamaz." };
+        }
         var newFine = new FineRecord
         {
             LicensePlate = request.LicensePlate,
