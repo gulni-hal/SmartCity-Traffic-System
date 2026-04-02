@@ -47,9 +47,9 @@ public class ErrorHandlingMiddleware
                 _logger.LogWarning("Response zaten başladığı için hata yanıtı yeniden yazılamadı. Path: {Path}", context.Request.Path);
                 return;
             }
-
             await HandleExceptionAsync(context, ex);
         }
+
 
     }
 

@@ -10,15 +10,17 @@ var authServiceBaseUrl = builder.Configuration["AuthService:BaseUrl"];
 var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
 var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 
-builder.Services.AddScoped<IAuditLogRepository>(provider =>
-    new MongoAuditLogRepository(mongoConnectionString!, mongoDatabaseName!)
+builder.Services.AddScoped<IAdminActionLogRepository>(provider =>
+    new MongoAdminActionLogRepository(mongoConnectionString!, mongoDatabaseName!)
 );
+
 
 
 builder.Services.AddHttpClient("AuthService", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5154");
+    client.BaseAddress = new Uri(authServiceBaseUrl!);
 });
+
 
 builder.Services.AddScoped<IAuthValidationService, AuthValidationService>();
 
@@ -34,6 +36,8 @@ app.MapGet("/health", () => Results.Ok("Healthy"));
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<AuthMiddleware>();
+app.UseMiddleware<AdminActionLoggingMiddleware>();
+
 
 app.MapReverseProxy();
 
