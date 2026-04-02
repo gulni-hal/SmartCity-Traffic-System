@@ -77,4 +77,19 @@ public class RequestLoggingMiddleware
 
         return "unknown";
     }
+
+    private static RequestAuditLog CreateAuditLog(HttpContext context)
+    {
+        return new RequestAuditLog
+        {
+            Method = context.Request.Method,
+            Path = context.Request.Path,
+            StatusCode = context.Response.StatusCode,
+            Username = context.Items["Username"]?.ToString() ?? string.Empty,
+            Role = context.Items["Role"]?.ToString() ?? string.Empty,
+            TargetService = ResolveTargetService(context.Request.Path),
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
 }
