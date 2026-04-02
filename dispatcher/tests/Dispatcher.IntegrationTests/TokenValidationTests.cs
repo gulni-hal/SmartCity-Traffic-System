@@ -24,11 +24,15 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll(typeof(IAuthValidationService));
+                services.RemoveAll(typeof(IAuditLogRepository));
+
                 services.AddSingleton<IAuthValidationService>(
                     new FakeAuthValidationService(new AuthValidationResult
                     {
                         IsValid = false
                     }));
+
+                services.AddSingleton<IAuditLogRepository>(new FakeAuditLogRepository());
             });
         });
 
@@ -41,21 +45,6 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    private sealed class FakeAuthValidationService : IAuthValidationService
-    {
-        private readonly AuthValidationResult _result;
-
-        public FakeAuthValidationService(AuthValidationResult result)
-        {
-            _result = result;
-        }
-
-        public Task<AuthValidationResult> ValidateAsync(string token)
-        {
-            return Task.FromResult(_result);
-        }
-    }
-
     [Fact]
     public async Task Get_Fines_With_Observer_Role_Should_Return_403()
     {
@@ -64,6 +53,8 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll(typeof(IAuthValidationService));
+                services.RemoveAll(typeof(IAuditLogRepository));
+
                 services.AddSingleton<IAuthValidationService>(
                     new FakeAuthValidationService(new AuthValidationResult
                     {
@@ -71,6 +62,8 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
                         Username = "ali",
                         Role = "Observer"
                     }));
+
+                services.AddSingleton<IAuditLogRepository>(new FakeAuditLogRepository());
             });
         });
 
@@ -91,6 +84,8 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll(typeof(IAuthValidationService));
+                services.RemoveAll(typeof(IAuditLogRepository));
+
                 services.AddSingleton<IAuthValidationService>(
                     new FakeAuthValidationService(new AuthValidationResult
                     {
@@ -98,6 +93,8 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
                         Username = "ali",
                         Role = "TrafficPolice"
                     }));
+
+                services.AddSingleton<IAuditLogRepository>(new FakeAuditLogRepository());
             });
         });
 
@@ -110,5 +107,26 @@ public class TokenValidationTests : IClassFixture<WebApplicationFactory<Program>
         Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    private sealed class FakeAuthValidationService : IAuthValidationService
+    {
+        private readonly AuthValidationResult _result;
 
+        public FakeAuthValidationService(AuthValidationResult result)
+        {
+            _result = result;
+        }
+
+        public Task<AuthValidationResult> ValidateAsync(string token)
+        {
+            return Task.FromResult(_result);
+        }
+    }
+
+    private sealed class FakeAuditLogRepository : IAuditLogRepository
+    {
+        public Task CreateAsync(RequestAuditLog log)
+        {
+            return Task.CompletedTask;
+        }
+    }
 }

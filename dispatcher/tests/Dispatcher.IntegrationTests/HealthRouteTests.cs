@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
+﻿using System.Net;
+using Dispatcher.Application;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Dispatcher.IntegrationTests;
 
@@ -20,10 +18,31 @@ public class HealthRouteTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task Get_Health_Without_Token_Should_Return_200()
     {
-        var client = _factory.CreateClient();
+        var factory = CreateFactoryWithFakeAuditLog();
+        var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    private WebApplicationFactory<Program> CreateFactoryWithFakeAuditLog()
+    {
+        return _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll(typeof(IAuditLogRepository));
+                services.AddSingleton<IAuditLogRepository>(new FakeAuditLogRepository());
+            });
+        });
+    }
+
+    private sealed class FakeAuditLogRepository : IAuditLogRepository
+    {
+        public Task CreateAsync(RequestAuditLog log)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

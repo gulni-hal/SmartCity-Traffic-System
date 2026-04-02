@@ -9,19 +9,16 @@ public class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RequestLoggingMiddleware> _logger;
-    private readonly IAuditLogRepository _auditLogRepository;
 
     public RequestLoggingMiddleware(
         RequestDelegate next,
-        ILogger<RequestLoggingMiddleware> logger,
-        IAuditLogRepository auditLogRepository)
+        ILogger<RequestLoggingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
-        _auditLogRepository = auditLogRepository;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IAuditLogRepository auditLogRepository)
     {
         var sw = Stopwatch.StartNew();
 
@@ -50,46 +47,23 @@ public class RequestLoggingMiddleware
             CreatedAt = DateTime.UtcNow
         };
 
-        await _auditLogRepository.CreateAsync(auditLog);
+        try
+        {
+            await auditLogRepository.CreateAsync(auditLog);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Audit log veritabanına yazılamadı. Path: {Path}", context.Request.Path);
+        }
     }
 
     private static string ResolveTargetService(PathString path)
     {
-        if (path.StartsWithSegments("/api/auth"))
-        {
-            return "auth-service";
-        }
-
-        if (path.StartsWithSegments("/api/traffic"))
-        {
-            return "traffic-service";
-        }
-
-        if (path.StartsWithSegments("/api/fines"))
-        {
-            return "fine-service";
-        }
-
-        if (path.StartsWithSegments("/health"))
-        {
-            return "dispatcher";
-        }
+        if (path.StartsWithSegments("/api/auth")) return "auth-service";
+        if (path.StartsWithSegments("/api/traffic")) return "traffic-service";
+        if (path.StartsWithSegments("/api/fines")) return "fine-service";
+        if (path.StartsWithSegments("/health")) return "dispatcher";
 
         return "unknown";
     }
-
-    private static RequestAuditLog CreateAuditLog(HttpContext context)
-    {
-        return new RequestAuditLog
-        {
-            Method = context.Request.Method,
-            Path = context.Request.Path,
-            StatusCode = context.Response.StatusCode,
-            Username = context.Items["Username"]?.ToString() ?? string.Empty,
-            Role = context.Items["Role"]?.ToString() ?? string.Empty,
-            TargetService = ResolveTargetService(context.Request.Path),
-            CreatedAt = DateTime.UtcNow
-        };
-    }
-
 }

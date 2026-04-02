@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using Dispatcher.Application;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -30,6 +24,8 @@ public class DownstreamErrorTests : IClassFixture<WebApplicationFactory<Program>
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll(typeof(IAuthValidationService));
+                services.RemoveAll(typeof(IAuditLogRepository));
+
                 services.AddSingleton<IAuthValidationService>(
                     new FakeAuthValidationService(new AuthValidationResult
                     {
@@ -37,6 +33,8 @@ public class DownstreamErrorTests : IClassFixture<WebApplicationFactory<Program>
                         Username = "ali",
                         Role = "TrafficPolice"
                     }));
+
+                services.AddSingleton<IAuditLogRepository>(new FakeAuditLogRepository());
             });
         });
 
@@ -63,5 +61,12 @@ public class DownstreamErrorTests : IClassFixture<WebApplicationFactory<Program>
             return Task.FromResult(_result);
         }
     }
-}
 
+    private sealed class FakeAuditLogRepository : IAuditLogRepository
+    {
+        public Task CreateAsync(RequestAuditLog log)
+        {
+            return Task.CompletedTask;
+        }
+    }
+}

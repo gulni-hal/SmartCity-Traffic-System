@@ -3,7 +3,8 @@ using Dispatcher.Api.Middleware;
 using Dispatcher.Application;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
-
+using System.Collections.Generic;
+using System.Threading.Tasks;
 namespace Dispatcher.UnitTests.Middleware;
 
 public class RequestLoggingMiddlewareTests
@@ -26,9 +27,9 @@ public class RequestLoggingMiddlewareTests
 
         var repository = new FakeAuditLogRepository();
         var logger = new NullLogger<RequestLoggingMiddleware>();
-        var middleware = new RequestLoggingMiddleware(next, logger, repository);
+        var middleware = new RequestLoggingMiddleware(next, logger);
 
-        await middleware.InvokeAsync(context);
+        await middleware.InvokeAsync(context, repository);
 
         Assert.Single(repository.Logs);
 

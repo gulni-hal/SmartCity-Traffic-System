@@ -40,10 +40,17 @@ public class ErrorHandlingMiddleware
         }
         catch (Exception ex)
         {
-            // Sistemde beklenmeyen bir Exception (çökme) patlarsa burası yakalar
             _logger.LogError(ex, "Sistemde kritik bir hata yakalandı! Adres: {Path}", context.Request.Path);
+
+            if (context.Response.HasStarted)
+            {
+                _logger.LogWarning("Response zaten başladığı için hata yanıtı yeniden yazılamadı. Path: {Path}", context.Request.Path);
+                return;
+            }
+
             await HandleExceptionAsync(context, ex);
         }
+
     }
 
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)

@@ -19,8 +19,8 @@ public class AuthRouteTests : IClassFixture<WebApplicationFactory<Program>>
     public async Task Get_Auth_Route_Without_Token_Should_Not_Return_401()
     {
         var factory = CreateFactoryWithFakeAuditLog();
-
         var client = factory.CreateClient();
+
         var response = await client.GetAsync("/api/auth/login");
 
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -30,8 +30,8 @@ public class AuthRouteTests : IClassFixture<WebApplicationFactory<Program>>
     public async Task Get_Auth_Route_Without_Token_Should_Be_Public()
     {
         var factory = CreateFactoryWithFakeAuditLog();
-
         var client = factory.CreateClient();
+
         var response = await client.GetAsync("/api/auth/register");
 
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
