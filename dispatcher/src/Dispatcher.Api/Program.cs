@@ -10,9 +10,14 @@ var authServiceBaseUrl = builder.Configuration["AuthService:BaseUrl"];
 var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
 var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 
+builder.Services.AddScoped<IAuditLogRepository>(provider =>
+    new MongoAuditLogRepository(mongoConnectionString!, mongoDatabaseName!)
+);
+
 builder.Services.AddScoped<IAdminActionLogRepository>(provider =>
     new MongoAdminActionLogRepository(mongoConnectionString!, mongoDatabaseName!)
 );
+
 
 
 
