@@ -1,7 +1,12 @@
+﻿using System;
 using Auth.Application.DTOs;
 using Auth.Application.Entities;
 using Auth.Application.Interfaces;
 using Auth.Application.Services;
+using Xunit; // Hata almamak için Xunit ekliyoruz
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Auth.UnitTests.Services;
 
@@ -35,7 +40,8 @@ public class AuthServiceTests
         await repository.CreateAsync(new User
         {
             Username = "ali",
-            PasswordHash = "123456",
+            // DÜZELTME 1: Test verisindeki şifreyi BCrypt ile hashleyerek kaydediyoruz
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
             Role = "TrafficPolice"
         });
 
@@ -44,7 +50,7 @@ public class AuthServiceTests
         var request = new LoginRequest
         {
             Username = "ali",
-            Password = "123456"
+            Password = "123456" // Giriş yaparken düz metin yolluyoruz, servis bunu Verify ile çözecek
         };
 
         var result = await service.LoginAsync(request);
@@ -62,9 +68,11 @@ public class AuthServiceTests
         await repository.CreateAsync(new User
         {
             Username = "ali",
-            PasswordHash = "123456",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), // Tutarlılık için hashliyoruz
             Role = "TrafficPolice",
-            Token = "valid-token"
+            Token = "valid-token",
+            // DÜZELTME 2: Token'ın süresi dolmamış (1 saat sonrası) bir tarih veriyoruz
+            TokenExpiry = DateTime.UtcNow.AddHours(1)
         });
 
         var service = new AuthService(repository);
@@ -118,6 +126,7 @@ public class AuthServiceTests
                 existing.PasswordHash = user.PasswordHash;
                 existing.Role = user.Role;
                 existing.Token = user.Token;
+                existing.TokenExpiry = user.TokenExpiry; // Bunu da ekliyoruz
             }
 
             return Task.CompletedTask;

@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\src\Auth.Application\Auth.Application.csproj" />
+    <ProjectReference Include="..\src\Auth.Api\Auth.Api.csproj" />
   </ItemGroup>
 
 </Project>

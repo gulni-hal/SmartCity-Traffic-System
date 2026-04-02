@@ -70,5 +70,12 @@ public class AuthController : ControllerBase
         // Kullanıcı bulunursa 200 OK ve JSON data dönmelidir (Şifreyi asla dönmüyoruz!)
         return Ok(user);
     }
+    [HttpPost("logout/{username}")]
+    public async Task<IActionResult> Logout(string username)
+    {
+        var result = await _authService.LogoutAsync(username);
+        if (result) return Ok(new { Message = "Başarıyla çıkış yapıldı." });
+        return BadRequest(new { Error = "Çıkış işlemi başarısız." });
+    }
 
 }
