@@ -28,4 +28,8 @@ public class MongoTrafficRepository : ITrafficRepository
         // Lokasyona göre filtreleme yapıyoruz
         return await _collection.Find(t => t.LocationId == locationId).ToListAsync();
     }
+    public async Task<IEnumerable<TrafficRecord>> GetHotspotsAsync()
+    {
+        return await _collection.Find(t => t.DensityLevel == "High").ToListAsync();
+    }
 }

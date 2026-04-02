@@ -15,7 +15,7 @@ var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 builder.Services.AddScoped<ITrafficRepository>(provider =>
     new MongoTrafficRepository(mongoConnectionString!, mongoDatabaseName!)
 );
-builder.Services.AddScoped<TrafficService>();
+builder.Services.AddScoped<ITrafficService, TrafficService>();
 
 var app = builder.Build();
 

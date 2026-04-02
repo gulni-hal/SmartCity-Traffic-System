@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Traffic.Application.Services;
 using Traffic.Application.Interfaces;
 using Traffic.Application.Entities;
+using Traffic.Application.DTOs;
 
 namespace Traffic.UnitTests.Services;
 
@@ -23,6 +24,11 @@ public class FakeTrafficRepository : ITrafficRepository
     public Task<IEnumerable<TrafficRecord>> GetByLocationIdAsync(string locationId)
     {
         var result = _records.Where(r => r.LocationId == locationId);
+        return Task.FromResult(result.AsEnumerable());
+    }
+    public Task<IEnumerable<TrafficRecord>> GetHotspotsAsync()
+    {
+        var result = _records.Where(r => r.DensityLevel == "High");
         return Task.FromResult(result.AsEnumerable());
     }
 }
@@ -45,5 +51,31 @@ public class TrafficServiceTests
 
         Assert.True(result.Success);
         Assert.Equal("Trafik verisi basariyla kaydedildi.", result.Message);
+    }
+
+    [Fact]
+    public async Task GetTrafficByLocation_Should_Return_Data_When_Exists()
+    {
+        var fakeRepo = new FakeTrafficRepository();
+        await fakeRepo.CreateAsync(new TrafficRecord { LocationId = "Kadikoy", VehicleCount = 100, DensityLevel = "High" });
+        var service = new TrafficService(fakeRepo);
+
+        var result = await service.GetTrafficByLocationAsync("Kadikoy");
+
+        Assert.NotEmpty(result);
+        Assert.Equal("Kadikoy", result.First().LocationId);
+    }
+
+    [Fact]
+    public async Task RecordTraffic_Should_Fail_When_VehicleCount_Is_Negative()
+    {
+        var fakeRepo = new FakeTrafficRepository();
+        var service = new TrafficService(fakeRepo);
+        var request = new TrafficRecordRequest { LocationId = "Kadikoy", VehicleCount = -5, DensityLevel = "High" };
+
+        var result = await service.RecordTrafficAsync(request);
+
+        Assert.False(result.Success);
+        Assert.Equal("Araç sayısı negatif olamaz.", result.ErrorMessage);
     }
 }

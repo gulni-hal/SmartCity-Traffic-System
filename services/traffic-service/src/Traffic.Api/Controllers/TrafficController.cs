@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Traffic.Application.Services;
+using Traffic.Application.Interfaces;
+using Traffic.Application.DTOs;
 
 namespace Traffic.Api.Controllers;
 
@@ -9,9 +10,10 @@ namespace Traffic.Api.Controllers;
 [Route("api/[controller]")]
 public class TrafficController : ControllerBase
 {
-    private readonly TrafficService _trafficService;
+    private readonly ITrafficService _trafficService;
 
-    public TrafficController(TrafficService trafficService)
+    // HOCA UYUMU: Controller artık Interface'e bağımlı.
+    public TrafficController(ITrafficService trafficService)
     {
         _trafficService = trafficService;
     }
@@ -20,24 +22,23 @@ public class TrafficController : ControllerBase
     public async Task<IActionResult> RecordTraffic([FromBody] TrafficRecordRequest request)
     {
         var result = await _trafficService.RecordTrafficAsync(request);
-        if (result.Success) return Ok(result);
-        return BadRequest(result);
+        if (result.Success) return Created($"/api/traffic/{request.LocationId}", result);
+        return BadRequest(new { Error = result.ErrorMessage });
     }
 
-    // RMM SEVİYE 2 UYUMU: GET Metodu ve URL'den okunan parametre
-    // Örnek İstek: GET /api/traffic/Kadikoy-Merkez-1
     [HttpGet("{locationId}")]
     public async Task<IActionResult> GetTraffic(string locationId)
     {
         var records = await _trafficService.GetTrafficByLocationAsync(locationId);
+        if (records == null || !records.Any()) return NotFound(new { Message = "Trafik verisi bulunamadı." });
+        return Ok(records);
+    }
 
-        if (records == null || !records.Any())
-        {
-            // Kayıt yoksa 404 dönüyoruz
-            return NotFound(new { Message = $"{locationId} lokasyonuna ait trafik verisi bulunamadı." });
-        }
-
-        // Kayıt varsa 200 OK ile JSON formatında dönüyoruz
+    // ÜST DÜZEY İHTİYAÇ UCU
+    [HttpGet("hotspots")]
+    public async Task<IActionResult> GetHotspots()
+    {
+        var records = await _trafficService.GetHotspotsAsync();
         return Ok(records);
     }
 }

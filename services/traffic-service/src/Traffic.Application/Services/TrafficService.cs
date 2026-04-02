@@ -1,35 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Traffic.Application.Interfaces;
 using Traffic.Application.Entities;
+using Traffic.Application.DTOs;
 
 namespace Traffic.Application.Services;
 
-public class TrafficRecordRequest
-{
-    public string LocationId { get; set; } = string.Empty;
-    public int VehicleCount { get; set; }
-    public string DensityLevel { get; set; } = string.Empty;
-}
-
-public class TrafficRecordResult
-{
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-}
-
-// YENİ EKLENEN: Dışarıya döneceğimiz veri modeli
-public class TrafficRecordResponse
-{
-    public string LocationId { get; set; } = string.Empty;
-    public int VehicleCount { get; set; }
-    public string DensityLevel { get; set; } = string.Empty;
-    public DateTime RecordedAt { get; set; }
-}
-
-public class TrafficService
+public class TrafficService : ITrafficService
 {
     private readonly ITrafficRepository _repository;
 
@@ -40,6 +18,25 @@ public class TrafficService
 
     public async Task<TrafficRecordResult> RecordTrafficAsync(TrafficRecordRequest request)
     {
+        // 1. İŞ KURALI: Lokasyon ID boş olamaz
+        if (string.IsNullOrWhiteSpace(request.LocationId))
+        {
+            return new TrafficRecordResult { Success = false, ErrorMessage = "Lokasyon bilgisi boş olamaz." };
+        }
+
+        // 2. İŞ KURALI: Araç sayısı negatif olamaz
+        if (request.VehicleCount < 0)
+        {
+            return new TrafficRecordResult { Success = false, ErrorMessage = "Araç sayısı negatif olamaz." };
+        }
+
+        // 3. İŞ KURALI: Sadece belirli yoğunluk seviyeleri kabul edilebilir
+        var validDensities = new[] { "Low", "Medium", "High" };
+        if (!validDensities.Contains(request.DensityLevel))
+        {
+            return new TrafficRecordResult { Success = false, ErrorMessage = "Geçersiz yoğunluk seviyesi. (Low, Medium, High olmalıdır)" };
+        }
+
         var record = new TrafficRecord
         {
             LocationId = request.LocationId,
@@ -49,24 +46,19 @@ public class TrafficService
 
         await _repository.CreateAsync(record);
 
-        return new TrafficRecordResult
-        {
-            Success = true,
-            Message = "Trafik verisi basariyla kaydedildi."
-        };
+        return new TrafficRecordResult { Success = true, Message = "Trafik verisi basariyla kaydedildi." };
     }
 
-    // YENİ EKLENEN METOT: Verileri getir ve DTO'ya dönüştür
     public async Task<IEnumerable<TrafficRecordResponse>> GetTrafficByLocationAsync(string locationId)
     {
         var records = await _repository.GetByLocationIdAsync(locationId);
+        return records.Select(r => new TrafficRecordResponse { LocationId = r.LocationId, VehicleCount = r.VehicleCount, DensityLevel = r.DensityLevel, RecordedAt = r.RecordedAt });
+    }
 
-        return records.Select(r => new TrafficRecordResponse
-        {
-            LocationId = r.LocationId,
-            VehicleCount = r.VehicleCount,
-            DensityLevel = r.DensityLevel,
-            RecordedAt = r.RecordedAt
-        });
+    // ÜST DÜZEY İHTİYAÇ: Hotspot (Kritik Yoğunluk) Analizi
+    public async Task<IEnumerable<TrafficRecordResponse>> GetHotspotsAsync()
+    {
+        var records = await _repository.GetHotspotsAsync();
+        return records.Select(r => new TrafficRecordResponse { LocationId = r.LocationId, VehicleCount = r.VehicleCount, DensityLevel = r.DensityLevel, RecordedAt = r.RecordedAt });
     }
 }
