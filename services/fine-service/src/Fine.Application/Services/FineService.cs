@@ -61,4 +61,15 @@ public class FineService : IFineService
             CreatedAt = r.CreatedAt
         });
     }
+    public async Task<IEnumerable<FineRecordResponse>> GetAllFinesAsync()
+    {
+        var records = await _fineRepository.GetAllAsync();
+        return records.Select(r => new FineRecordResponse { LicensePlate = r.LicensePlate, Amount = r.Amount, Reason = r.Reason, CreatedAt = r.CreatedAt });
+    }
+
+    public async Task<bool> DeleteFineAsync(string id)
+    {
+        await _fineRepository.DeleteAsync(id);
+        return true;
+    }
 }

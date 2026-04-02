@@ -28,6 +28,19 @@ public class FakeFineRepository : IFineRepository
         var result = _fines.Where(f => f.LicensePlate == licensePlate);
         return Task.FromResult(result.AsEnumerable());
     }
+    // Hafızadaki tüm listeyi dönüyoruz
+    public Task<IEnumerable<FineRecord>> GetAllAsync()
+    {
+        return Task.FromResult(_fines.AsEnumerable());
+    }
+
+    // Hafızadaki listeden id ile eşleşeni bulup siliyoruz
+    public Task DeleteAsync(string id)
+    {
+        _fines.RemoveAll(f => f.Id == id);
+        return Task.CompletedTask;
+    }
+
 }
 
 public class FineServiceTests
@@ -55,6 +68,7 @@ public class FineServiceTests
         Assert.Equal("34ABC123", result.Data.LicensePlate);
     }
     [Fact]
+
     public async Task GetFinesByPlate_Should_Return_Records_When_Plate_Exists()
     {
         // Arrange

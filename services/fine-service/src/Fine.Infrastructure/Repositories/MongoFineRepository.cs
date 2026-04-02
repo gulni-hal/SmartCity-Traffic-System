@@ -28,4 +28,13 @@ public class MongoFineRepository : IFineRepository
         // Plakaya göre filtreleme yapıyoruz
         return await _finesCollection.Find(f => f.LicensePlate == licensePlate).ToListAsync();
     }
+    public async Task<IEnumerable<FineRecord>> GetAllAsync()
+    {
+        return await _finesCollection.Find(_ => true).ToListAsync();
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        await _finesCollection.DeleteOneAsync(f => f.Id == id);
+    }
 }
