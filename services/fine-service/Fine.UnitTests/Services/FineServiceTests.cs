@@ -54,4 +54,30 @@ public class FineServiceTests
         Assert.NotNull(result.Data);
         Assert.Equal("34ABC123", result.Data.LicensePlate);
     }
+    [Fact]
+    public async Task GetFinesByPlate_Should_Return_Records_When_Plate_Exists()
+    {
+        // Arrange
+        var fakeRepo = new FakeFineRepository();
+        await fakeRepo.CreateAsync(new FineRecord { LicensePlate = "34ABC123", Amount = 500, Reason = "Hız" });
+        var service = new FineService(fakeRepo);
+
+        // Act
+        var result = await service.GetFinesByPlateAsync("34ABC123");
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.Equal("34ABC123", result.First().LicensePlate);
+    }
+
+    [Fact]
+    public async Task GetFinesByPlate_Should_Return_Empty_When_Plate_Does_Not_Exist()
+    {
+        var fakeRepo = new FakeFineRepository();
+        var service = new FineService(fakeRepo);
+
+        var result = await service.GetFinesByPlateAsync("99BOS999");
+
+        Assert.Empty(result);
+    }
 }
