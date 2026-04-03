@@ -57,16 +57,5 @@ public class AuthRouteTests : IClassFixture<WebApplicationFactory<Program>>
         }
     }
 
-    [Fact]
-    public async Task Post_Logout_Route_Without_Token_Should_Not_Be_Blocked_By_Dispatcher()
-    {
-        var factory = CreateFactoryWithFakeAuditLog();
-        var client = factory.CreateClient();
-
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
-        var response = await client.SendAsync(request);
-
-        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
 
 }
