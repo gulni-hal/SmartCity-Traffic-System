@@ -5,12 +5,9 @@ namespace Auth.Application.Interfaces;
 
 public interface IAuthService
 {
-    //Dependency Injection (DI) kurarken veya API Controller  test edilirken bu interface kullanilacakkk!!
     Task<AuthResult> RegisterAsync(RegisterRequest request);
     Task<AuthResult> LoginAsync(LoginRequest request);
     Task<TokenValidationResult> ValidateTokenAsync(string token);
-   
     Task<UserData?> GetUserAsync(string username);
-    Task<bool> LogoutAsync(string username);
-
+    Task<bool> LogoutAsync(string token);
 }
