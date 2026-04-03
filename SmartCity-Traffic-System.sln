@@ -47,11 +47,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fine.UnitTests", "services\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "traffic-service", "traffic-service", "{004C944D-3292-F589-3FB7-AF8DE6828D0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traffic.Api", "services\traffic-service\Traffic.Api\Traffic.Api.csproj", "{C914ABEB-4419-49E9-B766-B5628F140F9C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traffic.Api", "services\traffic-service\src\Traffic.Api\Traffic.Api.csproj", "{C914ABEB-4419-49E9-B766-B5628F140F9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traffic.Application", "services\traffic-service\Traffic.Application\Traffic.Application.csproj", "{C5302C3D-D035-4A48-850D-FD8109970F3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traffic.Application", "services\traffic-service\src\Traffic.Application\Traffic.Application.csproj", "{C5302C3D-D035-4A48-850D-FD8109970F3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traffic.Infrastructure", "services\traffic-service\Traffic.Infrastructure\Traffic.Infrastructure.csproj", "{98A48E21-BA4E-472F-92B2-E4D1B58FB942}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traffic.Infrastructure", "services\traffic-service\src\Traffic.Infrastructure\Traffic.Infrastructure.csproj", "{98A48E21-BA4E-472F-92B2-E4D1B58FB942}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Traffic.UnitTests", "services\traffic-service\Traffic.UnitTests\Traffic.UnitTests.csproj", "{CDF1BBF2-83BB-417C-8BEC-C3114A5C7FAD}"
 EndProject

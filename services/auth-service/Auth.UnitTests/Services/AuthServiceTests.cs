@@ -95,6 +95,84 @@ public class AuthServiceTests
         Assert.False(result.IsValid);
     }
 
+    [Fact]
+    public async Task Register_Should_Assign_Default_Role()
+    {
+        var repository = new FakeUserRepository();
+        var service = new AuthService(repository);
+
+        var request = new RegisterRequest
+        {
+            Username = "new-user",
+            Password = "123456",
+            Role = "Admin"
+        };
+
+        var result = await service.RegisterAsync(request);
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.Equal("TrafficPolice", result.Data!.Role);
+    }
+
+    [Fact]
+    public async Task ValidateToken_Should_Return_False_When_Token_Is_Expired()
+    {
+        var repository = new FakeUserRepository();
+
+        await repository.CreateAsync(new User
+        {
+            Username = "ali",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+            Role = "TrafficPolice",
+            Token = "expired-token",
+            TokenExpiry = DateTime.UtcNow.AddMinutes(-5)
+        });
+
+        var service = new AuthService(repository);
+
+        var result = await service.ValidateTokenAsync("expired-token");
+
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public async Task Logout_Should_Clear_Token_And_Expiry()
+    {
+        var repository = new FakeUserRepository();
+
+        await repository.CreateAsync(new User
+        {
+            Username = "ali",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+            Role = "TrafficPolice",
+            Token = "valid-token",
+            TokenExpiry = DateTime.UtcNow.AddHours(1)
+        });
+
+        var service = new AuthService(repository);
+
+        var result = await service.LogoutAsync("valid-token");
+        var user = await repository.GetByUsernameAsync("ali");
+
+        Assert.True(result);
+        Assert.NotNull(user);
+        Assert.Null(user!.Token);
+        Assert.Null(user.TokenExpiry);
+    }
+
+    [Fact]
+    public async Task Logout_Should_Fail_When_Token_Not_Found()
+    {
+        var repository = new FakeUserRepository();
+        var service = new AuthService(repository);
+
+        var result = await service.LogoutAsync("missing-token");
+
+        Assert.False(result);
+    }
+
+
     private sealed class FakeUserRepository : IUserRepository
     {
         private readonly List<User> _users = new();
