@@ -20,7 +20,7 @@ public class InternalOnlyMiddleware
         // appsettings.json'dan beklediğimiz şifreyi çekiyoruz
         var expectedSecret = _configuration["InternalSecret"];
 
-        // İstek Dispatcher'dan gelmiyorsa (şifre yoksa veya yanlışsa) kapıdan çevir
+        // İstek Dispatcher'dan gelmiyorsa (şifre yoksa veya yanlışsa) geri doner
         if (!context.Request.Headers.TryGetValue("X-Internal-Secret", out var providedSecret) || providedSecret != expectedSecret)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -28,7 +28,7 @@ public class InternalOnlyMiddleware
             return;
         }
 
-        // Şifre doğruysa içeri al
+        // Şifre doğruysa kabul etme
         await _next(context);
     }
 }

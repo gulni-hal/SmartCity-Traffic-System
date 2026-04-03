@@ -47,13 +47,13 @@ public class AuthService : IAuthService
     {
         var user = await _userRepository.GetByUsernameAsync(request.Username);
 
-        // HOCA UYUMU: Gelen şifre ile Hash'lenmiş şifreyi güvenli şekilde karşılaştırıyoruz
+        // gelen şifre ile Hash'lenmiş şifreyi güvenli şekilde karşılaştırıyoruz
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             return new AuthResult { Success = false };
         }
 
-        // HOCA UYUMU: Token mantığını geliştiriyoruz (1 Saatlik ömür)
+        // token mantığını geliştirmek icin (1 Saatlik ömür)
         user.Token = Guid.NewGuid().ToString();
         user.TokenExpiry = DateTime.UtcNow.AddHours(1);
         await _userRepository.UpdateAsync(user);
@@ -109,7 +109,7 @@ public class AuthService : IAuthService
         return new UserData
         {
             Username = user.Username,
-            Role = user.Role // HOCA UYUMU: Yoruma alınan eksik rol düzeltildi
+            Role = user.Role // yoruma alınan eksik rol düzeltildi
         };
     }
 }

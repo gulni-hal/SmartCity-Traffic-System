@@ -10,6 +10,6 @@ public class User
     public string Role { get; set; } = "TrafficPolice";
     public string? Token { get; set; }
 
-    // HOCA UYUMU: Token'ın bir son kullanma tarihi olmalı
+    // token icin son kullanma tarihi
     public DateTime? TokenExpiry { get; set; }
 }
