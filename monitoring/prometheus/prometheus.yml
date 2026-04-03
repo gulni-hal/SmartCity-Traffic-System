@@ -1,0 +1,7 @@
+﻿global:
+  scrape_interval: 5s # Her 5 saniyede bir veri çek
+
+scrape_configs:
+  - job_name: 'dispatcher-api'
+    static_configs:
+      - targets: ['dispatcher-api:8080'] # Docker içindeki Dispatcher'ın adresi

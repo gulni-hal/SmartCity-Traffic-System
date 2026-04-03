@@ -1,0 +1,97 @@
+﻿version: '3.8'
+
+services:
+  # 1. VERİTABANLARI
+  auth-mongo:
+    image: mongo:latest
+    container_name: auth-mongo
+    ports:
+      - "27017:27017"
+
+  fine-mongo:
+    image: mongo:latest
+    container_name: fine-mongo
+    ports:
+      - "27018:27017"
+
+  traffic-mongo:
+    image: mongo:latest
+    container_name: traffic-mongo
+    ports:
+      - "27019:27017"
+
+  dispatcher-mongo:
+    image: mongo:latest
+    container_name: dispatcher-mongo
+    ports:
+      - "27020:27017"
+
+  # 2. MİKROSERVİSLER
+  auth-api:
+    build: 
+      context: ./services/auth-service/src
+      dockerfile: Auth.Api/Dockerfile
+    container_name: auth-api
+    depends_on:
+      - auth-mongo
+    environment:
+      - MongoDbSettings__ConnectionString=mongodb://auth-mongo:27017
+      
+  fine-api:
+    build: 
+      context: ./services/fine-service/src
+      dockerfile: Fine.Api/Dockerfile
+    container_name: fine-api
+    depends_on:
+      - fine-mongo
+    environment:
+      - MongoDbSettings__ConnectionString=mongodb://fine-mongo:27017
+
+  traffic-api:
+    build: 
+      context: ./services/traffic-service/src
+      dockerfile: Traffic.Api/Dockerfile
+    container_name: traffic-api
+    depends_on:
+      - traffic-mongo
+    environment:
+      - MongoDbSettings__ConnectionString=mongodb://traffic-mongo:27017
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - dispatcher-api
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  # 3. DISPATCHER (API GATEWAY)
+  dispatcher-api:
+    build: 
+      context: ./dispatcher/src
+      dockerfile: Dispatcher.Api/Dockerfile
+    container_name: dispatcher-api
+    ports:
+      - "5000:8080" # Dış dünyaya sadece Dispatcher'ın 5000 portu açık
+    depends_on:
+      - auth-api
+      - fine-api
+      - traffic-api
+      - dispatcher-mongo
+    environment:
+      - MongoDbSettings__ConnectionString=mongodb://dispatcher-mongo:27017
+      # YARP ve HTTP Client ayarlarını Docker ağına göre güncelliyoruz
+      - AuthService__BaseUrl=http://auth-api:8080
+      - ReverseProxy__Clusters__authCluster__Destinations__d1__Address=http://auth-api:8080/
+      - ReverseProxy__Clusters__trafficCluster__Destinations__d1__Address=http://traffic-api:8080/
+      - ReverseProxy__Clusters__fineCluster__Destinations__d1__Address=http://fine-api:8080/

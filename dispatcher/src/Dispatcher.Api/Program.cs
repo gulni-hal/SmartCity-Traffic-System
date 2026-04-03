@@ -1,7 +1,7 @@
-using Dispatcher.Api.Middleware;
+﻿using Dispatcher.Api.Middleware;
 using Dispatcher.Application;
 using Dispatcher.Infrastructure;
-
+using Prometheus;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,6 +43,11 @@ app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<AuthMiddleware>();
 app.UseMiddleware<AdminActionLoggingMiddleware>();
 
+// Trafik metriklerini toplar
+app.UseHttpMetrics();
+
+// Prometheus'un verileri çekeceği /metrics ucunu açar
+app.MapMetrics();
 
 app.MapReverseProxy();
 
