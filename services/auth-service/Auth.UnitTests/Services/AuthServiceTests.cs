@@ -22,7 +22,6 @@ public class AuthServiceTests
         {
             Username = "testuser",
             Password = "123456",
-            Role = "TrafficPolice"
         };
 
         var result = await service.RegisterAsync(request);
@@ -104,8 +103,7 @@ public class AuthServiceTests
         var request = new RegisterRequest
         {
             Username = "new-user",
-            Password = "123456",
-            Role = "Admin"
+            Password = "123456"
         };
 
         var result = await service.RegisterAsync(request);
@@ -114,6 +112,7 @@ public class AuthServiceTests
         Assert.NotNull(result.Data);
         Assert.Equal("TrafficPolice", result.Data!.Role);
     }
+
 
     [Fact]
     public async Task ValidateToken_Should_Return_False_When_Token_Is_Expired()
