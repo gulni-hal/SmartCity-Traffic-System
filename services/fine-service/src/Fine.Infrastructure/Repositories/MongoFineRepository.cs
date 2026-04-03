@@ -22,19 +22,19 @@ public class MongoFineRepository : IFineRepository
         await _finesCollection.InsertOneAsync(record);
     }
 
-    // YENİ EKLENEN METOT
     public async Task<IEnumerable<FineRecord>> GetByLicensePlateAsync(string licensePlate)
     {
-        // Plakaya göre filtreleme yapıyoruz
         return await _finesCollection.Find(f => f.LicensePlate == licensePlate).ToListAsync();
     }
+
     public async Task<IEnumerable<FineRecord>> GetAllAsync()
     {
         return await _finesCollection.Find(_ => true).ToListAsync();
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string id)
     {
-        await _finesCollection.DeleteOneAsync(f => f.Id == id);
+        var result = await _finesCollection.DeleteOneAsync(f => f.Id == id);
+        return result.DeletedCount > 0;
     }
 }

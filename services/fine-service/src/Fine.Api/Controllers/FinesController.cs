@@ -62,6 +62,13 @@ public class FinesController : ControllerBase
     public async Task<IActionResult> DeleteFine(string id)
     {
         var result = await _fineService.DeleteFineAsync(id);
-        return NoContent(); // RMM Seviye 2'ye göre başarılı silme işlemi 204 NoContent dönmelidir.
+
+        if (!result)
+        {
+            return NotFound(new { Message = "Silinecek ceza kaydı bulunamadı." });
+        }
+
+        return NoContent();
     }
+
 }

@@ -12,7 +12,6 @@ namespace Fine.UnitTests.Services;
 // Test için sadece hafızada çalışan sahte (Fake) bir veritabanı simülasyonu
 public class FakeFineRepository : IFineRepository
 {
-    // Sahte veritabanımız verileri geçici olarak bu listede tutacak
     private readonly List<FineRecord> _fines = new();
 
     public Task CreateAsync(FineRecord record)
@@ -21,27 +20,24 @@ public class FakeFineRepository : IFineRepository
         return Task.CompletedTask;
     }
 
-    // YENİ EKLENEN METOT: Arayüzdeki sözleşmeyi yerine getiriyoruz
     public Task<IEnumerable<FineRecord>> GetByLicensePlateAsync(string licensePlate)
     {
-        // Plakaya göre listede arama yapıyoruz
         var result = _fines.Where(f => f.LicensePlate == licensePlate);
         return Task.FromResult(result.AsEnumerable());
     }
-    // Hafızadaki tüm listeyi dönüyoruz
+
     public Task<IEnumerable<FineRecord>> GetAllAsync()
     {
         return Task.FromResult(_fines.AsEnumerable());
     }
 
-    // Hafızadaki listeden id ile eşleşeni bulup siliyoruz
-    public Task DeleteAsync(string id)
+    public Task<bool> DeleteAsync(string id)
     {
-        _fines.RemoveAll(f => f.Id == id);
-        return Task.CompletedTask;
+        var removed = _fines.RemoveAll(f => f.Id == id) > 0;
+        return Task.FromResult(removed);
     }
-
 }
+
 
 public class FineServiceTests
 {
@@ -94,4 +90,44 @@ public class FineServiceTests
 
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task GetAllFines_Should_Return_All_Data()
+    {
+        var fakeRepo = new FakeFineRepository();
+        await fakeRepo.CreateAsync(new FineRecord { LicensePlate = "34ABC123", Amount = 500, Reason = "Hız" });
+        await fakeRepo.CreateAsync(new FineRecord { LicensePlate = "06XYZ789", Amount = 750, Reason = "Park" });
+
+        var service = new FineService(fakeRepo);
+
+        var result = await service.GetAllFinesAsync();
+
+        Assert.Equal(2, result.Count());
+    }
+
+    [Fact]
+    public async Task DeleteFine_Should_Return_True_When_Record_Exists()
+    {
+        var fakeRepo = new FakeFineRepository();
+        var record = new FineRecord { LicensePlate = "34ABC123", Amount = 500, Reason = "Hız" };
+        await fakeRepo.CreateAsync(record);
+
+        var service = new FineService(fakeRepo);
+
+        var result = await service.DeleteFineAsync(record.Id);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task DeleteFine_Should_Return_False_When_Record_Not_Found()
+    {
+        var fakeRepo = new FakeFineRepository();
+        var service = new FineService(fakeRepo);
+
+        var result = await service.DeleteFineAsync("not-found-id");
+
+        Assert.False(result);
+    }
+
 }

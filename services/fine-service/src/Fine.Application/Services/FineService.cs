@@ -32,6 +32,7 @@ public class FineService : IFineService
         {
             return new FineResult { Success = false, ErrorMessage = "Ceza nedeni boş bırakılamaz." };
         }
+
         var newFine = new FineRecord
         {
             LicensePlate = request.LicensePlate,
@@ -44,32 +45,45 @@ public class FineService : IFineService
         return new FineResult
         {
             Success = true,
-            Data = new FineData { LicensePlate = newFine.LicensePlate }
+            Data = new FineData
+            {
+                Id = newFine.Id,
+                LicensePlate = newFine.LicensePlate
+            }
         };
     }
 
-    // YENİ EKLENEN METOT
     public async Task<IEnumerable<FineRecordResponse>> GetFinesByPlateAsync(string licensePlate)
     {
         var records = await _fineRepository.GetByLicensePlateAsync(licensePlate);
 
         return records.Select(r => new FineRecordResponse
         {
+            Id = r.Id,
             LicensePlate = r.LicensePlate,
             Amount = r.Amount,
             Reason = r.Reason,
             CreatedAt = r.CreatedAt
         });
     }
+
     public async Task<IEnumerable<FineRecordResponse>> GetAllFinesAsync()
     {
         var records = await _fineRepository.GetAllAsync();
-        return records.Select(r => new FineRecordResponse { LicensePlate = r.LicensePlate, Amount = r.Amount, Reason = r.Reason, CreatedAt = r.CreatedAt });
+
+        return records.Select(r => new FineRecordResponse
+        {
+            Id = r.Id,
+            LicensePlate = r.LicensePlate,
+            Amount = r.Amount,
+            Reason = r.Reason,
+            CreatedAt = r.CreatedAt
+        });
     }
 
     public async Task<bool> DeleteFineAsync(string id)
     {
-        await _fineRepository.DeleteAsync(id);
-        return true;
+        return await _fineRepository.DeleteAsync(id);
     }
+
 }
