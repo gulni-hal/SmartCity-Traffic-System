@@ -22,7 +22,12 @@ public class TrafficController : ControllerBase
     public async Task<IActionResult> RecordTraffic([FromBody] TrafficRecordRequest request)
     {
         var result = await _trafficService.RecordTrafficAsync(request);
-        if (result.Success) return Created($"/api/traffic/{request.LocationId}", result);
+
+        if (result.Success)
+        {
+            return Created($"/api/traffic/{request.LocationId}", result);
+        }
+
         return BadRequest(new { Error = result.ErrorMessage });
     }
 
@@ -30,15 +35,20 @@ public class TrafficController : ControllerBase
     public async Task<IActionResult> GetTraffic(string locationId)
     {
         var records = await _trafficService.GetTrafficByLocationAsync(locationId);
-        if (records == null || !records.Any()) return NotFound(new { Message = "Trafik verisi bulunamadı." });
+
+        if (records == null || !records.Any())
+        {
+            return NotFound(new { Message = "Trafik verisi bulunamadı." });
+        }
+
         return Ok(records);
     }
 
-    // ÜST DÜZEY İHTİYAÇ UCU
     [HttpGet("hotspots")]
     public async Task<IActionResult> GetHotspots()
     {
         var records = await _trafficService.GetHotspotsAsync();
         return Ok(records);
     }
+
 }

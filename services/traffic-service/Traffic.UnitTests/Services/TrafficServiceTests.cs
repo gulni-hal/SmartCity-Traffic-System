@@ -78,4 +78,71 @@ public class TrafficServiceTests
         Assert.False(result.Success);
         Assert.Equal("Araç sayısı negatif olamaz.", result.ErrorMessage);
     }
+
+    [Fact]
+    public async Task RecordTraffic_Should_Fail_When_LocationId_Is_Empty()
+    {
+        var fakeRepo = new FakeTrafficRepository();
+        var service = new TrafficService(fakeRepo);
+
+        var request = new TrafficRecordRequest
+        {
+            LocationId = "",
+            VehicleCount = 100,
+            DensityLevel = "High"
+        };
+
+        var result = await service.RecordTrafficAsync(request);
+
+        Assert.False(result.Success);
+        Assert.Equal("Lokasyon bilgisi boş olamaz.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task RecordTraffic_Should_Fail_When_DensityLevel_Is_Invalid()
+    {
+        var fakeRepo = new FakeTrafficRepository();
+        var service = new TrafficService(fakeRepo);
+
+        var request = new TrafficRecordRequest
+        {
+            LocationId = "Kadikoy",
+            VehicleCount = 100,
+            DensityLevel = "Extreme"
+        };
+
+        var result = await service.RecordTrafficAsync(request);
+
+        Assert.False(result.Success);
+        Assert.Equal("Geçersiz yoğunluk seviyesi. (Low, Medium, High olmalıdır)", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetHotspots_Should_Return_Only_High_Density_Records()
+    {
+        var fakeRepo = new FakeTrafficRepository();
+
+        await fakeRepo.CreateAsync(new TrafficRecord
+        {
+            LocationId = "Kadikoy",
+            VehicleCount = 100,
+            DensityLevel = "High"
+        });
+
+        await fakeRepo.CreateAsync(new TrafficRecord
+        {
+            LocationId = "Besiktas",
+            VehicleCount = 60,
+            DensityLevel = "Medium"
+        });
+
+        var service = new TrafficService(fakeRepo);
+
+        var result = await service.GetHotspotsAsync();
+
+        Assert.Single(result);
+        Assert.Equal("Kadikoy", result.First().LocationId);
+        Assert.Equal("High", result.First().DensityLevel);
+    }
+
 }

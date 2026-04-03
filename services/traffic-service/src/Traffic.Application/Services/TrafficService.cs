@@ -18,23 +18,32 @@ public class TrafficService : ITrafficService
 
     public async Task<TrafficRecordResult> RecordTrafficAsync(TrafficRecordRequest request)
     {
-        // 1. İŞ KURALI: Lokasyon ID boş olamaz
         if (string.IsNullOrWhiteSpace(request.LocationId))
         {
-            return new TrafficRecordResult { Success = false, ErrorMessage = "Lokasyon bilgisi boş olamaz." };
+            return new TrafficRecordResult
+            {
+                Success = false,
+                ErrorMessage = "Lokasyon bilgisi boş olamaz."
+            };
         }
 
-        // 2. İŞ KURALI: Araç sayısı negatif olamaz
         if (request.VehicleCount < 0)
         {
-            return new TrafficRecordResult { Success = false, ErrorMessage = "Araç sayısı negatif olamaz." };
+            return new TrafficRecordResult
+            {
+                Success = false,
+                ErrorMessage = "Araç sayısı negatif olamaz."
+            };
         }
 
-        // 3. İŞ KURALI: Sadece belirli yoğunluk seviyeleri kabul edilebilir
         var validDensities = new[] { "Low", "Medium", "High" };
         if (!validDensities.Contains(request.DensityLevel))
         {
-            return new TrafficRecordResult { Success = false, ErrorMessage = "Geçersiz yoğunluk seviyesi. (Low, Medium, High olmalıdır)" };
+            return new TrafficRecordResult
+            {
+                Success = false,
+                ErrorMessage = "Geçersiz yoğunluk seviyesi. (Low, Medium, High olmalıdır)"
+            };
         }
 
         var record = new TrafficRecord
@@ -46,8 +55,13 @@ public class TrafficService : ITrafficService
 
         await _repository.CreateAsync(record);
 
-        return new TrafficRecordResult { Success = true, Message = "Trafik verisi basariyla kaydedildi." };
+        return new TrafficRecordResult
+        {
+            Success = true,
+            Message = "Trafik verisi basariyla kaydedildi."
+        };
     }
+
 
     public async Task<IEnumerable<TrafficRecordResponse>> GetTrafficByLocationAsync(string locationId)
     {
