@@ -49,7 +49,7 @@ public class FinesController : ControllerBase
         // Veri varsa 200 OK ile JSON dönmelidir
         return Ok(fines);
     }
-    // HOCA GERİ BİLDİRİMİ UYUMU: Liste/Filtre İşlemi
+    // Liste/Filtre İşlemi
     [HttpGet]
     public async Task<IActionResult> GetAllFines()
     {
@@ -57,7 +57,7 @@ public class FinesController : ControllerBase
         return Ok(fines);
     }
 
-    // HOCA GERİ BİLDİRİMİ UYUMU: Silme İşlemi (DELETE Metodu)
+    // Silme İşlemi (DELETE Metodu)
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteFine(string id)
     {
