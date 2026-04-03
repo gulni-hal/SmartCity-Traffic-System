@@ -70,12 +70,42 @@ public class AuthController : ControllerBase
         // Kullanıcı bulunursa 200 OK ve JSON data dönmelidir (Şifreyi asla dönmüyoruz!)
         return Ok(user);
     }
-    [HttpPost("logout/{username}")]
-    public async Task<IActionResult> Logout(string username)
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
     {
-        var result = await _authService.LogoutAsync(username);
-        if (result) return Ok(new { Message = "Başarıyla çıkış yapıldı." });
-        return BadRequest(new { Error = "Çıkış işlemi başarısız." });
+        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
+        {
+            return Unauthorized(new { Error = "Authorization header eksik." });
+        }
+
+        var token = ExtractToken(authHeader.ToString());
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Unauthorized(new { Error = "Geçersiz token." });
+        }
+
+        var result = await _authService.LogoutAsync(token);
+
+        if (!result)
+        {
+            return Unauthorized(new { Error = "Çıkış işlemi başarısız." });
+        }
+
+        return Ok(new { Message = "Başarıyla çıkış yapıldı." });
     }
+
+    private static string ExtractToken(string authorizationHeader)
+    {
+        const string bearerPrefix = "Bearer ";
+
+        if (authorizationHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return authorizationHeader[bearerPrefix.Length..].Trim();
+        }
+
+        return string.Empty;
+    }
+
 
 }
