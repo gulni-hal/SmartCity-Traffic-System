@@ -33,21 +33,28 @@ builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
 
-
 var app = builder.Build();
 
 app.MapGet("/health", () => Results.Ok("Healthy"));
 
-app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseMiddleware<RequestLoggingMiddleware>();
-app.UseMiddleware<AuthMiddleware>();
-app.UseMiddleware<AdminActionLoggingMiddleware>();
-
-// Trafik metriklerini toplar
+// 1. Prometheus metrik toplamaya en üstte başlasın
 app.UseHttpMetrics();
 
-// Prometheus'un verileri çekeceği /metrics ucunu açar
+app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
+
+// 2. Prometheus'un verileri okuduğu ucu YETKİLENDİRMEDEN ÖNCE açıyoruz!
 app.MapMetrics();
+
+// 3. Bizim sıkı güvenlik görevlimiz (Sadece yetki gerektiren sayfalarda çalışacak)
+app.UseWhen(context =>
+    !context.Request.Path.StartsWithSegments("/metrics") &&
+    !context.Request.Path.StartsWithSegments("/health"),
+    appBuilder =>
+    {
+        appBuilder.UseMiddleware<AuthMiddleware>();
+    }
+);
 
 app.MapReverseProxy();
 
