@@ -2,6 +2,7 @@ using Traffic.Application.Interfaces;
 using Traffic.Application.Services;
 using Traffic.Infrastructure.Repositories;
 using Traffic.Api.Middleware;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,11 +26,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapGet("/health", () => Results.Ok("Healthy"));
+
+app.UseHttpMetrics();
+app.MapMetrics();
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
-// Sadece Dispatcher'dan gelenleri kabul et
-app.UseMiddleware<InternalOnlyMiddleware>();
+app.UseWhen(context =>
+    !context.Request.Path.StartsWithSegments("/metrics") &&
+    !context.Request.Path.StartsWithSegments("/health"),
+    appBuilder =>
+    {
+        appBuilder.UseMiddleware<InternalOnlyMiddleware>();
+    });
 
 app.MapControllers();
 

@@ -1,8 +1,8 @@
 ﻿using Auth.Application.Interfaces;
 using Auth.Application.Services;
 using Auth.Infrastructure.Repositories;
-// Kendi yazdığımız middleware'i kullanabilmek için ekliyoruz
 using Auth.Api.Middleware;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,17 +10,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// appsettings.json içindeki MongoDB ayarlarını okuyoruz
 var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
 var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 
-// Dependency Injection (DI) Kayıtları
-// IUserRepository istendiğinde, ayarları içine koyarak MongoUserRepository veriyoruz
 builder.Services.AddScoped<IUserRepository>(provider =>
     new MongoUserRepository(mongoConnectionString!, mongoDatabaseName!)
 );
 
-// AuthService'i ekliyoruz (Artık otomatik olarak MongoUserRepository'yi kullanacak)
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
@@ -31,11 +27,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapGet("/health", () => Results.Ok("Healthy"));
+
+app.UseHttpMetrics();
+app.MapMetrics();
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
-// İŞTE BURASI: Dış dünyadan gelen direkt istekleri engelleyen kalkanımız
-app.UseMiddleware<InternalOnlyMiddleware>();
+app.UseWhen(context =>
+    !context.Request.Path.StartsWithSegments("/metrics") &&
+    !context.Request.Path.StartsWithSegments("/health"),
+    appBuilder =>
+    {
+        appBuilder.UseMiddleware<InternalOnlyMiddleware>();
+    });
 
 app.MapControllers();
 
