@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 var authServiceBaseUrl = builder.Configuration["AuthService:BaseUrl"];
 var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
 var mongoDatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
+var internalSecret = builder.Configuration["InternalSecret"];
 
 builder.Services.AddScoped<IAuditLogRepository>(provider =>
     new MongoAuditLogRepository(mongoConnectionString!, mongoDatabaseName!)
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IAdminActionLogRepository>(provider =>
 builder.Services.AddHttpClient("AuthService", client =>
 {
     client.BaseAddress = new Uri(authServiceBaseUrl!);
+    client.DefaultRequestHeaders.Add("X-Internal-Secret", internalSecret!);
 });
 
 
