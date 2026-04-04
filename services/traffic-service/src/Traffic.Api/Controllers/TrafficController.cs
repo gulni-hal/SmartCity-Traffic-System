@@ -12,7 +12,6 @@ public class TrafficController : ControllerBase
 {
     private readonly ITrafficService _trafficService;
 
-    // HOCA UYUMU: Controller artık Interface'e bağımlı.
     public TrafficController(ITrafficService trafficService)
     {
         _trafficService = trafficService;
@@ -25,9 +24,11 @@ public class TrafficController : ControllerBase
 
         if (result.Success)
         {
+            TrafficMetrics.TrafficRecorded.Inc();
             return Created($"/api/traffic/{request.LocationId}", result);
         }
 
+        TrafficMetrics.TrafficValidationFailed.Inc();
         return BadRequest(new { Error = result.ErrorMessage });
     }
 
@@ -47,8 +48,8 @@ public class TrafficController : ControllerBase
     [HttpGet("hotspots")]
     public async Task<IActionResult> GetHotspots()
     {
+        TrafficMetrics.HotspotsRequested.Inc();
         var records = await _trafficService.GetHotspotsAsync();
         return Ok(records);
     }
-
 }

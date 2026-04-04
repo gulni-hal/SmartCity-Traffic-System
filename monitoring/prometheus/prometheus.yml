@@ -1,7 +1,19 @@
 ﻿global:
-  scrape_interval: 5s # Her 5 saniyede bir veri çek
+  scrape_interval: 5s
 
 scrape_configs:
   - job_name: 'dispatcher-api'
     static_configs:
-      - targets: ['dispatcher-api:8080'] # Docker içindeki Dispatcher'ın adresi
+      - targets: ['dispatcher-api:8080']
+
+  - job_name: 'auth-api'
+    static_configs:
+      - targets: ['auth-api:8080']
+
+  - job_name: 'fine-api'
+    static_configs:
+      - targets: ['fine-api:8080']
+
+  - job_name: 'traffic-api'
+    static_configs:
+      - targets: ['traffic-api:8080']

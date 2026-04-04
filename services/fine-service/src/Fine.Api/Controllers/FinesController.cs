@@ -7,7 +7,7 @@ using Fine.Application.Interfaces;
 namespace Fine.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")] // Çıktı: /api/fines
+[Route("api/[controller]")]
 public class FinesController : ControllerBase
 {
     private readonly IFineService _fineService;
@@ -17,7 +17,6 @@ public class FinesController : ControllerBase
         _fineService = fineService;
     }
 
-    // CREATE İŞLEMİ -> POST Metodu -> Başarılıysa 200 veya 201 döner
     [HttpPost]
     public async Task<IActionResult> CreateFine([FromBody] CreateFineRequest request)
     {
@@ -25,16 +24,14 @@ public class FinesController : ControllerBase
 
         if (result.Success)
         {
-            // HOCA GERİ BİLDİRİMİ UYUMU: 200 OK yerine 201 Created dönüyoruz.
-            // REST standartlarına göre oluşturulan kaynağın yolu da belirtilmelidir.
+            FineMetrics.FineCreated.Inc();
             return Created($"/api/fines/{request.LicensePlate}", result);
         }
 
+        FineMetrics.FineValidationFailed.Inc();
         return BadRequest(new { Error = "Ceza kaydı oluşturulamadı. Lütfen bilgileri kontrol edin." });
     }
 
-    // READ İŞLEMİ -> GET Metodu -> URL'den parametre alır (RMM Seviye 2 Uyumu)
-    // Örnek İstek: GET /api/fines/34ABC123
     [HttpGet("{licensePlate}")]
     public async Task<IActionResult> GetFines(string licensePlate)
     {
@@ -42,14 +39,12 @@ public class FinesController : ControllerBase
 
         if (fines == null || !fines.Any())
         {
-            // Veri yoksa RMM Seviye 2 gereği 404 Not Found dönmelidir!
             return NotFound(new { Message = $"{licensePlate} plakasına ait ceza bulunamadı." });
         }
 
-        // Veri varsa 200 OK ile JSON dönmelidir
         return Ok(fines);
     }
-    // Liste/Filtre İşlemi
+
     [HttpGet]
     public async Task<IActionResult> GetAllFines()
     {
@@ -57,7 +52,6 @@ public class FinesController : ControllerBase
         return Ok(fines);
     }
 
-    // Silme İşlemi (DELETE Metodu)
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteFine(string id)
     {
@@ -68,7 +62,7 @@ public class FinesController : ControllerBase
             return NotFound(new { Message = "Silinecek ceza kaydı bulunamadı." });
         }
 
+        FineMetrics.FineDeleted.Inc();
         return NoContent();
     }
-
 }

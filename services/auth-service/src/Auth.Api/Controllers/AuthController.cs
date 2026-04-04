@@ -22,7 +22,7 @@ public class AuthController : ControllerBase
 
         if (result.Success)
         {
-            // RMM Seviye 2 Uyumu: Yeni kaynak oluştuğu için 200 OK yerine 201 Created dönüyoruz.
+            AuthMetrics.RegisterSuccess.Inc();
             return Created(string.Empty, result);
         }
 
@@ -36,9 +36,11 @@ public class AuthController : ControllerBase
 
         if (result.Success)
         {
+            AuthMetrics.LoginSuccess.Inc();
             return Ok(result);
         }
 
+        AuthMetrics.LoginFailed.Inc();
         return Unauthorized(new { Error = "Kullanıcı adı veya şifre hatalı." });
     }
 
@@ -54,8 +56,7 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
-    // RMM SEVİYE 2 UYUMU: GET Metodu ve URL'den okunan parametre
-    // Örnek İstek: GET /api/auth/ali_veli
+
     [HttpGet("{username}")]
     public async Task<IActionResult> GetUser(string username)
     {
@@ -63,13 +64,12 @@ public class AuthController : ControllerBase
 
         if (user == null)
         {
-            // Kullanıcı bulunamazsa RMM gereği 404 Not Found dönmelidir
             return NotFound(new { Message = "Kullanıcı bulunamadı." });
         }
 
-        // Kullanıcı bulunursa 200 OK ve JSON data dönmelidir (Şifreyi asla dönmüyoruz!)
         return Ok(user);
     }
+
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
@@ -92,6 +92,7 @@ public class AuthController : ControllerBase
             return Unauthorized(new { Error = "Çıkış işlemi başarısız." });
         }
 
+        AuthMetrics.LogoutSuccess.Inc();
         return Ok(new { Message = "Başarıyla çıkış yapıldı." });
     }
 
@@ -106,6 +107,4 @@ public class AuthController : ControllerBase
 
         return string.Empty;
     }
-
-
 }
