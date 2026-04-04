@@ -1,4 +1,161 @@
-## 4.4. Performans ve Yük Testi (Load Testing) Raporu
+# Akıllı Şehir Trafik Kontrol Sistemi (SmartCity-Traffic-System)
+
+---
+
+## 1. Proje Bilgileri
+
+**Proje Adı:** Akıllı Şehir Trafik Kontrol Sistemi  
+
+**Ders:** Yazılım Geliştirme Laboratuvarı-II
+
+**Bölüm:** Bilişim Sistemleri Mühendisliği
+
+**Tarih:** 05.04.2026
+
+
+
+Grup Üyeleri:
+
+
+* 241307114 Ömer Faruk Güler (GitHub: @farukomerg)
+
+
+* 231307064 Gülnihal Eruslu (GitHub: @gulni-hal)
+
+---
+
+## 2. Giriş ve Problemin Tanımı
+
+Modern şehirlerdeki hızlı nüfus artışı, trafik yoğunluğunun ve kural ihlallerinin geleneksel, monolitik sistemlerle takip edilmesini imkansız hale getirmiştir. Monolitik yapıların aşırı veri yükü altında darboğazlar (bottleneck) yaşaması, sistemin tamamen çökmesine veya yanıt sürelerinin uzamasına neden olmaktadır.
+
+Bu projenin amacı; şehir içi trafiği anlık olarak izleyebilen, yoğunluk bölgelerini (hotspot) analiz eden ve hız ihlalleri gibi durumlarda otomatik ceza kaydı oluşturabilen, yüksek erişilebilirliğe sahip, ölçeklenebilir bir mikroservis mimarisi tasarlamaktır. Proje, API Gateway üzerinden güvenli (JWT destekli) bir yönlendirme sağlayarak anlık yüksek trafik yüklerini başarıyla karşılamayı hedeflemektedir.
+
+---
+
+## 3. Sistem Tasarımı, Restful Mimarisi ve Literatür İncelemesi
+
+### 3.1. Restful Servisler ve Richardson Olgunluk Modeli (RMM)
+
+REST (Representational State Transfer), web servisleri tasarlamak için kullanılan, istemci-sunucu bağımsızlığına dayanan bir mimari yaklaşımdır. Projemizdeki mikroservisler, Richardson Olgunluk Modeli'ne (RMM) göre değerlendirilmiş ve standartlara uygun olarak geliştirilmiştir:
+
+- **Seviye 0 (POX):** Sadece tek bir URI ve tek bir HTTP metodu (genellikle POST) kullanılır. Projemiz bu seviyeyi aşmıştır.  
+- **Seviye 1 (Kaynaklar):** Her verinin kendine ait bir URI'si vardır (Örn: /api/traffic/live).  
+- **Seviye 2 (HTTP Fiilleri):** CRUD işlemleri için doğru HTTP fiilleri kullanılır (GET, POST, PUT, DELETE). Projemiz, uygun HTTP fiilleri ve HTTP durum kodları (200 OK, 201 Created, 401 Unauthorized vb.) kullanarak Seviye 2 standartlarını tam olarak karşılamaktadır.  
+- **Seviye 3 (HATEOAS):** İstemciyi yönlendiren hipermetya kontrolleri. Projede performans odaklı çalışıldığı için bu seviye uygulanmamıştır.  
+
+---
+
+### 3.2. Sınıf Yapıları ve Algoritmalar
+
+Sistem, Entity-Repository-Service-Controller (Katmanlı Mimari) yapısını temel almaktadır:
+
+- **Auth Service:** User entity'sini yönetir. BCrypt algoritması kullanılarak şifreler tek yönlü olarak hashlenir. Bu algoritma, brute-force saldırılarını engellemek için bilinçli olarak CPU'yu yoran, iteratif bir güvenlik mekanizmasına sahiptir.  
+
+- **Traffic Service:** Anlık trafik verilerini (Lokasyon, Araç Sayısı, Yoğunluk Seviyesi) toplar ve hotspot analiz algoritmaları ile belirli bir eşiğin üzerindeki lokasyonları filtreler.  
+
+- **Fine Service:** Araç plakalarına kesilen cezaların (Fine entity) tutulduğu servistir.  
+
+- **Dispatcher (API Gateway):** YARP tabanlı ters vekil sunucudur. İsteğin path'ine göre (Örn: /api/fines) hedef mikroservise yönlendirme (Routing Algorithm) yapar.  
+
+---
+
+### 3.3. Karmaşıklık Analizi (Complexity Analysis)
+
+- **API Gateway Yönlendirmesi:** YARP, hash tabanlı veya trie (prefix tree) tabanlı route eşleştirme kullandığı için yönlendirme karmaşıklığı O(1) veya O(K) (K: URL uzunluğu) seviyesindedir.  
+
+- **Kullanıcı Girişi ve Hash Doğrulama (Auth):** Veritabanından kullanıcıyı bulma işlemi indeksleme sayesinde O(log N) sürerken, BCrypt şifre doğrulama işlemi iterasyon sayısına (work factor) bağlı olarak O(W) zaman karmaşıklığına sahiptir. Yük testlerinde (k6) görülen darboğazın ana sebebi bu işlemin asimptotik olarak yüksek CPU maliyetidir.  
+
+- **Veri Yazma ve Okuma (MongoDB):** Indexlenmiş alanlar (Örn: Plaka veya Lokasyon ID) üzerinden yapılan sorgular B-Tree yapıları sayesinde O(log N) performansla çalışır.  
+
+---
+
+### 3.4. Sequence (Sıralı Akış) Diyagramı
+
+```mermaid
+sequenceDiagram
+    actor Client as Kullanıcı / Arayüz
+    participant GW as Dispatcher (Gateway)
+    participant Auth as Auth API
+    participant Fine as Fine API
+    participant DB as MongoDB
+
+    Client->>GW: POST /api/auth/login (Kimlik Bilgileri)
+    GW->>Auth: İsteği Yönlendir
+    Auth->>DB: Kullanıcıyı Doğrula (BCrypt Verify)
+    DB-->>Auth: Doğrulandı
+    Auth-->>GW: JWT Token Üret ve Dön
+    GW-->>Client: 200 OK + Bearer Token
+
+    Client->>GW: POST /api/fines (Token + Ceza Verisi)
+    GW->>GW: Token Geçerlilik Kontrolü (AuthMiddleware)
+    GW->>Fine: İsteği Yönlendir
+    Fine->>DB: Ceza Kaydını Oluştur
+    DB-->>Fine: Başarılı
+    Fine-->>GW: 201 Created
+    GW-->>Client: 201 Created (Ceza Kesildi)
+```
+## 4. Proje Modülleri ve Mimari Şema
+
+Sistem izolasyonunu sağlamak amacıyla veritabanı her mikroservis (Database per Service pattern) için ayrılmış ve sistem sağlığı Prometheus & Grafana ile izlenebilir hale getirilmiştir.
+
+```mermaid
+graph TD
+    UI[React Frontend / Kullanıcı Arayüzü] -->|HTTP REST| API_GW[Dispatcher API Gateway]
+    
+    API_GW -->|Token/Yetki| Auth[Auth API]
+    API_GW -->|Trafik Akışı| Traffic[Traffic API]
+    API_GW -->|Ceza İşlemi| Fine[Fine API]
+
+    Auth --> DB1[(Auth DB - MongoDB)]
+    Traffic --> DB2[(Traffic DB - MongoDB)]
+    Fine --> DB3[(Fine DB - MongoDB)]
+    
+    API_GW --> DB4[(Audit Log DB)]
+
+    Prometheus -->|Scrape /metrics| API_GW
+    Prometheus -->|Scrape /metrics| Auth
+    Prometheus -->|Scrape /metrics| Traffic
+    Prometheus -->|Scrape /metrics| Fine
+    
+    Grafana -->|Sorgu| Prometheus
+```
+## Modüllerin İşlevleri
+
+- **React Frontend:** Son kullanıcının sisteme giriş yapabildiği, anlık trafik/ceza simülasyonu gönderebildiği ve iframe üzerinden Grafana panellerini izleyebildiği kontrol merkezidir.  
+- **Dispatcher API (YARP):** Sistemin tek giriş kapısıdır. CORS politikalarını uygular, global hata yakalaması (Error Handling) yapar, JWT yetkilendirmesini denetler ve her isteği veritabanına loglar (Audit).  
+- **Auth API:** JWT (JSON Web Token) altyapısını kullanarak kullanıcı oturumlarını yönetir.  
+- **Traffic API:** Sensörlerden veya simülasyondan gelen anlık yoğunluk verilerini işler.  
+- **Fine API:** Belirlenen kural ihlallerine yönelik plaka bazlı trafik cezalarını yönetir.  
+- **Prometheus & Grafana:** Tüm mikroservislerin P95 yanıt sürelerini, anlık istek sayısını (RPS), hata oranlarını ve sistem sağlığını görselleştiren devops izleme modülüdür.  
+
+## 5. Sistemi Ayağa Kaldırma (Kurulum)
+
+Projenin bağımlılıklarının ve altyapısının izole bir şekilde çalışması için Docker ve Node.js kullanılmıştır.
+
+### 1. Mikroservisler ve Veritabanlarını Başlatma (Docker)
+
+Sistemin kök dizininde (docker-compose.yml dosyasının bulunduğu yer) aşağıdaki komutu çalıştırarak tüm arka plan servislerini ayağa kaldırın:
+
+```bash
+docker-compose up --build -d
+```
+Bu komut; MongoDB veritabanlarını, 4 farklı mikroservisi (Auth, Traffic, Fine, Dispatcher), Prometheus'u ve Grafana'yı otomatik olarak kurup çalıştıracaktır.
+
+### 2. Kullanıcı Arayüzünü Başlatma (React/NPM)
+```bash
+cd @latest
+npm install
+npm run dev
+```
+Erişim Adresleri:
+
+- Frontend Arayüzü: http://localhost:5173
+
+- Dispatcher (Gateway): http://localhost:5000
+
+- Grafana İzleme Paneli: http://localhost:3000
+
+## 6. Performans ve Yük Testi (Load Testing) Raporu
 
 **Test Aracı:** k6  
 **Maksimum Eşzamanlı Kullanıcı (VU):** 500  
