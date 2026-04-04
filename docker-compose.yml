@@ -74,6 +74,11 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+
 
   # 3. DISPATCHER (API GATEWAY)
   dispatcher-api:
@@ -95,3 +100,7 @@ services:
       - ReverseProxy__Clusters__authCluster__Destinations__d1__Address=http://auth-api:8080/
       - ReverseProxy__Clusters__trafficCluster__Destinations__d1__Address=http://traffic-api:8080/
       - ReverseProxy__Clusters__fineCluster__Destinations__d1__Address=http://fine-api:8080/
+
+
+volumes:
+  grafana_data:
