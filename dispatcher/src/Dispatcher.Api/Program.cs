@@ -34,6 +34,16 @@ builder.Services.AddScoped<IAuthValidationService, AuthValidationService>();
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin() // Herkese açık (Geliştirme ortamı için ideal)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 
 var app = builder.Build();
 
@@ -41,6 +51,7 @@ app.MapGet("/health", () => Results.Ok("Healthy"));
 
 // 1. Prometheus metrik toplamaya en üstte başlasın
 app.UseHttpMetrics();
+app.UseCors("AllowFrontend");
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
