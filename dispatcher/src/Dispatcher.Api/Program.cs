@@ -52,6 +52,16 @@ app.MapGet("/health", () => Results.Ok("Healthy"));
 // 1. Prometheus metrik toplamaya en üstte başlasın
 app.UseHttpMetrics();
 app.UseCors("AllowFrontend");
+app.Use(async (context, next) =>
+{
+    if (HttpMethods.IsOptions(context.Request.Method))
+    {
+        context.Response.StatusCode = StatusCodes.Status204NoContent;
+        return;
+    }
+
+    await next();
+});
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
