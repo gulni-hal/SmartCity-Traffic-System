@@ -26,9 +26,9 @@ Grup Üyeleri:
 
 ## 2. Giriş ve Problemin Tanımı
 
-Modern şehirlerdeki hızlı nüfus artışı, trafik yoğunluğunun ve kural ihlallerinin geleneksel, monolitik sistemlerle takip edilmesini imkansız hale getirmiştir. Monolitik yapıların aşırı veri yükü altında darboğazlar (bottleneck) yaşaması, sistemin tamamen çökmesine veya yanıt sürelerinin uzamasına neden olmaktadır.
+Modern şehirlerdeki hızlı nüfus artışı, trafik yoğunluğunun ve kural ihlallerinin geleneksel sistemlerle takip edilmesini imkansız hale getirmiştir. Bu yapıların aşırı veri yükü altında darboğazlar (bottleneck) yaşaması, sistemin tamamen çökmesine veya yanıt sürelerinin uzamasına neden olmaktadır.
 
-Bu projenin amacı; şehir içi trafiği anlık olarak izleyebilen, yoğunluk bölgelerini (hotspot) analiz eden ve hız ihlalleri gibi durumlarda otomatik ceza kaydı oluşturabilen, yüksek erişilebilirliğe sahip, ölçeklenebilir bir mikroservis mimarisi tasarlamaktır. Proje, API Gateway üzerinden güvenli (JWT destekli) bir yönlendirme sağlayarak anlık yüksek trafik yüklerini başarıyla karşılamayı hedeflemektedir.
+Bu projenin amacı şehir içi trafiği anlık olarak izleyebilen yoğunluk bölgelerini (hotspot) analiz eden ve hız ihlalleri gibi durumlarda otomatik ceza kaydı oluşturabilen yüksek erişilebilirliğe sahip ölçeklenebilir bir mikroservis mimarisi tasarlamaktır. Proje, API Gateway üzerinden güvenli (JWT destekli) bir yönlendirme sağlayarak anlık yüksek trafik yüklerini başarıyla karşılamayı hedeflemektedir.
 
 ---
 
@@ -41,7 +41,6 @@ REST (Representational State Transfer), web servisleri tasarlamak için kullanı
 - **Seviye 0 (POX):** Sadece tek bir URI ve tek bir HTTP metodu (genellikle POST) kullanılır. Projemiz bu seviyeyi aşmıştır.  
 - **Seviye 1 (Kaynaklar):** Her verinin kendine ait bir URI'si vardır (Örn: /api/traffic/live).  
 - **Seviye 2 (HTTP Fiilleri):** CRUD işlemleri için doğru HTTP fiilleri kullanılır (GET, POST, PUT, DELETE). Projemiz, uygun HTTP fiilleri ve HTTP durum kodları (200 OK, 201 Created, 401 Unauthorized vb.) kullanarak Seviye 2 standartlarını tam olarak karşılamaktadır.  
-- **Seviye 3 (HATEOAS):** İstemciyi yönlendiren hipermetya kontrolleri. Projede performans odaklı çalışıldığı için bu seviye uygulanmamıştır.  
 
 ---
 
@@ -63,7 +62,7 @@ Sistem, Entity-Repository-Service-Controller (Katmanlı Mimari) yapısını teme
 
 - **API Gateway Yönlendirmesi:** YARP, hash tabanlı veya trie (prefix tree) tabanlı route eşleştirme kullandığı için yönlendirme karmaşıklığı O(1) veya O(K) (K: URL uzunluğu) seviyesindedir.  
 
-- **Kullanıcı Girişi ve Hash Doğrulama (Auth):** Veritabanından kullanıcıyı bulma işlemi indeksleme sayesinde O(log N) sürerken, BCrypt şifre doğrulama işlemi iterasyon sayısına (work factor) bağlı olarak O(W) zaman karmaşıklığına sahiptir. Yük testlerinde (k6) görülen darboğazın ana sebebi bu işlemin asimptotik olarak yüksek CPU maliyetidir.  
+- **Kullanıcı Girişi ve Hash Doğrulama (Auth):** Veritabanından kullanıcıyı bulma işlemi indeksleme sayesinde O(log N) sürerken BCrypt şifre doğrulama işlemi iterasyon sayısına (work factor) bağlı olarak O(W) zaman karmaşıklığına sahiptir. Yük testlerinde (k6) görülen darboğazın ana sebebi bu işlemin asimptotik olarak yüksek CPU maliyetidir.  
 
 - **Veri Yazma ve Okuma (MongoDB):** Indexlenmiş alanlar (Örn: Plaka veya Lokasyon ID) üzerinden yapılan sorgular B-Tree yapıları sayesinde O(log N) performansla çalışır.  
 
@@ -126,36 +125,9 @@ graph TD
 - **Auth API:** JWT (JSON Web Token) altyapısını kullanarak kullanıcı oturumlarını yönetir.  
 - **Traffic API:** Sensörlerden veya simülasyondan gelen anlık yoğunluk verilerini işler.  
 - **Fine API:** Belirlenen kural ihlallerine yönelik plaka bazlı trafik cezalarını yönetir.  
-- **Prometheus & Grafana:** Tüm mikroservislerin P95 yanıt sürelerini, anlık istek sayısını (RPS), hata oranlarını ve sistem sağlığını görselleştiren devops izleme modülüdür.  
+- **Prometheus & Grafana:** Tüm mikroservislerin P95 yanıt sürelerini, anlık istek sayısını (RPS), hata oranlarını ve sistem sağlığını görselleştiren devops izleme modülüdür.
 
-## 5. Sistemi Ayağa Kaldırma (Kurulum)
-
-Projenin bağımlılıklarının ve altyapısının izole bir şekilde çalışması için Docker ve Node.js kullanılmıştır.
-
-### 1. Mikroservisler ve Veritabanlarını Başlatma (Docker)
-
-Sistemin kök dizininde (docker-compose.yml dosyasının bulunduğu yer) aşağıdaki komutu çalıştırarak tüm arka plan servislerini ayağa kaldırın:
-
-```bash
-docker-compose up --build -d
-```
-Bu komut; MongoDB veritabanlarını, 4 farklı mikroservisi (Auth, Traffic, Fine, Dispatcher), Prometheus'u ve Grafana'yı otomatik olarak kurup çalıştıracaktır.
-
-### 2. Kullanıcı Arayüzünü Başlatma (React/NPM)
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Erişim Adresleri:
-
-- Frontend Arayüzü: http://localhost:5173
-
-- Dispatcher (Gateway): http://localhost:5000
-
-- Grafana İzleme Paneli: http://localhost:3000
-
-## 6. Performans ve Yük Testi (Load Testing) Raporu
+## 5. Performans ve Yük Testi (Load Testing) Raporu
 
 **Test Aracı:** k6  
 **Maksimum Eşzamanlı Kullanıcı (VU):** 500  
@@ -163,13 +135,13 @@ Erişim Adresleri:
 
 ---
 
-### Test Senaryosu
+### 5.1 Test Senaryosu
 
 Sistemin yoğun istek altındaki davranışını ve API Gateway (Dispatcher) yönlendirme performansını ölçmek için kademeli olarak artan bir yük testi (ramp-up) uygulanmıştır. Test, sıfırdan başlayarak zirve noktası olan 500 eşzamanlı sanal kullanıcıya ulaşmış ve toplamda 5 dakika sürmüştür.
 
 ---
 
-### Her Sanal Kullanıcı (VU) İçin Gerçekleştirilen İşlemler
+### 5.2 Her Sanal Kullanıcı (VU) İçin Gerçekleştirilen İşlemler
 
 Uçtan uca (E2E) test akışı kapsamında her bir sanal kullanıcı döngüsel olarak aşağıdaki adımları simüle etmiştir:
 
@@ -187,7 +159,7 @@ Uçtan uca (E2E) test akışı kapsamında her bir sanal kullanıcı döngüsel 
 
 ---
 
-### Test Sonuçları
+### 5.3. Test Sonuçları
 
 #### Genel İstatistikler
 
@@ -201,7 +173,7 @@ Uçtan uca (E2E) test akışı kapsamında her bir sanal kullanıcı döngüsel 
 
 ---
 
-### Yanıt Süreleri (Response Times)
+### 5.4. Yanıt Süreleri (Response Times)
 
 | Metrik | Değer |
 |------|------|
@@ -216,7 +188,7 @@ Not: İsteklerin %95’i 3.31 saniye veya daha kısa sürede tamamlanmıştır.
 
 ---
 
-### Hata Oranı (Fail Rate)
+### 5.5. Hata Oranı (Fail Rate)
 
 | Metrik | Değer |
 |------|------|
@@ -226,7 +198,7 @@ Not: İsteklerin %95’i 3.31 saniye veya daha kısa sürede tamamlanmıştır.
 
 ---
 
-### Threshold (Eşik) Durumu
+### 5.6. Threshold (Eşik) Durumu
 **Durum:**  
 Test için belirlenen hedefler:
 
@@ -236,9 +208,9 @@ Test için belirlenen hedefler:
 500 eşzamanlı kullanıcının oluşturduğu ağır yük altında bu hedefler aşılmıştır.
 
 ---
-## Analiz ve Yorum
+## 6. Analiz ve Yorum
 
-### Güçlü Yönler
+### 6.1. Güçlü Yönler
 
 - **Yüksek İstek İşleme Kapasitesi:**  
   Sistem 5 dakika gibi kısa bir sürede 64 binden fazla isteği (%87.24 başarı oranı ile) işlemeyi başarmıştır. Saniyede 213 isteğe (RPS) ulaşılması, API Gateway (Dispatcher) ve mikroservis iletişiminin temel seviyede stabil olduğunu göstermektedir.
@@ -250,7 +222,7 @@ Test için belirlenen hedefler:
   Medyanın 298 ms seviyesinde kalması, sistemdeki isteklerin büyük bir çoğunluğunun aslında oldukça hızlı işlendiğini kanıtlamaktadır. Gecikmelerin geneli, yükün tepe (pik) yaptığı anlarda yığılan isteklere aittir.
 ---
 
-### Zayıf Yönler ve Darboğazlar (Bottlenecks)
+### 6.2. Zayıf Yönler ve Darboğazlar (Bottlenecks)
 
 #### 1. Hata Oranının Artışı (%12.76)
 
@@ -279,7 +251,8 @@ Kullanıcı sayısı 500'e ulaştığında sistem darboğaza girmiştir. Kurgula
 
 ---
 
-## İzleme ve Metrik Görselleri (Grafana Dashboards)
+
+### 6.3. İzleme ve Metrik Görselleri (Grafana Dashboards)
 
 Sistemin yük altındaki davranışını gösteren Grafana panelleri aşağıda sunulmuştur:
 
@@ -293,4 +266,61 @@ Sistemin yük altındaki davranışını gösteren Grafana panelleri aşağıda 
 | Toplam İstek Hızı | <img width="966" height="282" alt="image" src="https://github.com/user-attachments/assets/778f63ee-3c4d-4fc3-aebb-a2b81c7b0306" />|
 
 Not: Bu metrikler Prometheus üzerinden toplanarak Grafana dashboard’ları ile görselleştirilmiştir.
+  
 
+## 7. Sistemi Ayağa Kaldırma (Kurulum)
+
+Projenin bağımlılıklarının ve altyapısının izole bir şekilde çalışması için Docker ve Node.js kullanılmıştır.
+
+### 7.1. Mikroservisler ve Veritabanlarını Başlatma (Docker)
+
+Sistemin kök dizininde (docker-compose.yml dosyasının bulunduğu yer) aşağıdaki komutu çalıştırarak tüm arka plan servislerini ayağa kaldırın:
+
+```bash
+docker-compose up --build -d
+```
+Bu komut; MongoDB veritabanlarını, 4 farklı mikroservisi (Auth, Traffic, Fine, Dispatcher), Prometheus'u ve Grafana'yı otomatik olarak kurup çalıştıracaktır.
+
+### 7.2. Kullanıcı Arayüzünü Başlatma (React/NPM)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Erişim Adresleri:
+
+- Frontend Arayüzü: http://localhost:5173
+
+- Dispatcher (Gateway): http://localhost:5000
+
+- Grafana İzleme Paneli: http://localhost:3000
+
+
+## 8. Sonuç ve Tartışma
+
+Akıllı Şehir Trafik Kontrol Sistemi projesi, artan şehir trafiği verilerinin ve kural ihlallerinin modern yazılım mimarileri kullanılarak nasıl ölçeklenebilir bir şekilde yönetilebileceğini göstermek amacıyla geliştirilmiştir. Proje kapsamında elde edilen başarılar, sistemin sınırlılıkları ve gelecekteki olası geliştirmeler aşağıda detaylandırılmıştır.
+
+### 8.1. Proje Başarıları
+
+**Başarılı Mikroservis ve API Gateway Entegrasyonu:** Sistem, tek bir monolitik yapı yerine sorumlulukların dağıtıldığı (Auth, Traffic, Fine) bir mikroservis mimarisine oturtulmuştur. YARP (Yet Another Reverse Proxy) kullanılarak tasarlanan Dispatcher, tüm istekleri tek bir kapıdan başarıyla yönlendirmiş, kimlik doğrulama (JWT) ve merkezi loglama (Audit Log) işlemlerini kusursuz bir şekilde üstlenmiştir.
+
+**Yüksek Erişilebilirlik ve Yük Toleransı:** k6 aracı ile gerçekleştirilen E2E (Uçtan uca) performans testlerinde, sistem 64.000'den fazla HTTP isteğini karşılamış ve 100 eşzamanlı kullanıcı (VU) seviyesine kadar %100 başarı oranıyla (sıfır çökme) çalışmıştır. Ortalama yanıt süreleri (ms seviyesinde) endüstri standartlarında tutulmuştur.
+
+**Canlı İzleme ve Gelişmiş Kontrol Paneli:** Prometheus ve Grafana araçları kullanılarak her bir mikroservisin sağlığı ve P95 yanıt süreleri görselleştirilmiştir. Geliştirilen React tabanlı interaktif "Smart City Dashboard" arayüzü sayesinde, hem sisteme anlık trafik verisi gönderilebilmiş hem de Grafana panelleri ve sistem logları tek bir ekrandan eşzamanlı (canlı) olarak izlenebilmiştir.
+
+### 8.2. Sınırlılıklar ve Karşılaşılan Darboğazlar (Bottlenecks)
+
+**Kriptografik İşlemci (CPU) Darboğazı:** 500 eşzamanlı kullanıcı ile yapılan stres testlerinde, güvenliği sağlamak amacıyla Auth API servisinde kullanılan BCrypt şifreleme algoritmasının CPU'yu yoğun kullanması sebebiyle bir darboğaz (bottleneck) tespit edilmiştir. Bu durum yanıt sürelerini artırmış ve %12 seviyesinde zaman aşımı (timeout) hatasına neden olmuştur. Ancak bu durum, API Gateway'in alt servisleri (Traffic ve Fine) koruma işlevini ve izolasyonun gücünü de kanıtlamıştır.
+
+**Büyük Veri Yönetimi ve Arayüz Performansı:** Testler sonucunda MongoDB veritabanına yığılan on binlerce log kaydının arayüze (Frontend) tek seferde aktarılması tarayıcı seviyesinde performans kayıplarına (kasma) yol açmıştır. Bu sorun, istemci (React) ve sunucu (C#) tarafında uygulanan kısıtlamalar (Limit/Slice) ile geçici olarak çözülmüştür.
+.
+
+### 8.3. Olası Geliştirmeler ve Gelecek Çalışmalar
+
+Sistemin kurumsal bir ürün haline gelmesi için gelecekte şu modüllerin entegre edilmesi planlanılabilinir:
+
+- **Redis ile In-Memory Caching:** Sık sorgulanan trafik yoğunluk bölgelerinin (Hotspots) ve sürekli doğrulanması gereken JWT Token'ların Redis önbelleğinde (cache) tutularak veritabanı okuma maliyetlerinin ve CPU yükünün düşürülmesi.
+
+- **SignalR ile Gerçek Zamanlı Bildirimler (Push Notifications):** Arayüzde kullanılan "HTTP Polling" (arka planda periyodik veri çekme) mantığı yerine, WebSockets/SignalR kullanılarak, yeni bir trafik cezası veya yüksek yoğunluk tespit edildiğinde arayüze anında uyarı (alert) düşmesinin sağlanması.
+
+- **İnteraktif Şehir Haritası:** React arayüzüne Leaflet.js veya Google Maps API entegre edilerek, "Traffic Hotspot" verilerinin harita üzerinde kırmızı (High), turuncu (Medium) ve yeşil (Low) ısı haritaları (heatmap) şeklinde görselleştirilmesi.
