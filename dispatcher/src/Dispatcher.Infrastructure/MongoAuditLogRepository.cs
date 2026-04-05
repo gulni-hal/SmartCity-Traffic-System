@@ -23,4 +23,11 @@ public class MongoAuditLogRepository : IAuditLogRepository
     {
         await _collection.InsertOneAsync(log);
     }
+    public async Task<IEnumerable<RequestAuditLog>> GetRecentLogsAsync(int limit)
+    {
+        return await _collection.Find(_ => true)
+                                .SortByDescending(x => x.CreatedAt)
+                                .Limit(limit)
+                                .ToListAsync();
+    }
 }

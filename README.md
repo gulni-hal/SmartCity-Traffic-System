@@ -143,7 +143,7 @@ Bu komut; MongoDB veritabanlarını, 4 farklı mikroservisi (Auth, Traffic, Fine
 
 ### 2. Kullanıcı Arayüzünü Başlatma (React/NPM)
 ```bash
-cd @latest
+cd frontend
 npm install
 npm run dev
 ```

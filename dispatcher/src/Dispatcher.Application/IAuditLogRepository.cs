@@ -9,4 +9,5 @@ namespace Dispatcher.Application;
 public interface IAuditLogRepository
 {
     Task CreateAsync(RequestAuditLog log);
+    Task<IEnumerable<RequestAuditLog>> GetRecentLogsAsync(int limit);
 }
